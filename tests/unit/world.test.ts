@@ -3,12 +3,13 @@ import { RoomManager } from "../../src/server/room-manager.mts";
 import { WorldSimulation, type SessionNotice } from "../../src/server/world.mts";
 import { WALK_SPEED } from "../../src/shared/movement.ts";
 import {
+  attractionInteractSchema,
   playerInputSchema,
   worldEnterSchema,
   type RoomAdmission,
   type WorldSnapshot,
 } from "../../src/shared/protocol.ts";
-import { SPAWN_POSITION } from "../../src/shared/world.ts";
+import { INTERACTION_ZONES, SPAWN_POSITION, nearestAttraction } from "../../src/shared/world.ts";
 
 const version = 1;
 
@@ -199,4 +200,39 @@ test("room disconnect keeps the pose until the grace period and resume continues
   expect(latest(published, host.snapshot.roomId)?.players.map((player) => player.playerId)).toEqual([guest.playerId]);
   expect(world.leave(guest.playerId)).toEqual({ ok: true });
   expect(latest(published, host.snapshot.roomId)?.players).toEqual([]);
+});
+
+test("validates interaction proximity, availability, and schemas", () => {
+  expect(nearestAttraction(SPAWN_POSITION[0], SPAWN_POSITION[2])).toBeNull();
+  for (const zone of Object.values(INTERACTION_ZONES)) {
+    expect(nearestAttraction(zone.approach[0], zone.approach[2])?.id).toBe(zone.id);
+  }
+
+  expect(attractionInteractSchema.safeParse({ version, attraction: "fountain" }).success).toBe(true);
+  expect(attractionInteractSchema.safeParse({ version, attraction: "secret" }).success).toBe(false);
+  expect(attractionInteractSchema.safeParse({ version, attraction: "fountain", extra: 1 }).success).toBe(false);
+
+  let now = 0;
+  const world = new WorldSimulation({
+    now: () => now,
+    publish: () => undefined,
+    isAvailable: (attraction) => attraction !== "dancePavilion",
+  });
+  expect(world.interact("missing", "fountain")).toEqual({ ok: false, code: "NOT_IN_WORLD" });
+
+  const player = notice("host", "room-a", ["host"]);
+  world.sync(player, "bound");
+  world.enter(player, "Man");
+  expect(world.interact(player.playerId, "fountain")).toEqual({ ok: false, code: "TOO_FAR" });
+  expect(world.interact(player.playerId, "dancePavilion")).toEqual({ ok: false, code: "UNAVAILABLE" });
+
+  // Walk straight north toward the fountain approach.
+  world.input(player.playerId, 1, 0, -1);
+  for (let i = 1; i <= 24; i++) {
+    now += 50;
+    if (i % 2 === 0) world.input(player.playerId, i, 0, -1);
+    world.tick(now);
+  }
+  const ok = world.interact(player.playerId, "fountain");
+  expect(ok).toMatchObject({ ok: true, attraction: "fountain", label: "Plaza Fountain" });
 });

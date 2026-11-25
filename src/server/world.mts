@@ -11,7 +11,13 @@ import {
   type PlayerPose,
   type WorldSnapshot,
 } from "../shared/protocol.ts";
-import { SPAWN_POSITION, type AvatarKind } from "../shared/world.ts";
+import {
+  ATTRACTION_DETAILS,
+  INTERACTION_ZONES,
+  SPAWN_POSITION,
+  type AttractionId,
+  type AvatarKind,
+} from "../shared/world.ts";
 
 export interface SessionNotice {
   playerId: string;
@@ -56,12 +62,14 @@ export class WorldSimulation {
   private readonly options: {
     now: () => number;
     publish: (snapshot: WorldSnapshot, connections: string[]) => void;
+    isAvailable?: (attraction: AttractionId) => boolean;
   };
   private lastTick: number;
 
   constructor(options: {
     now: () => number;
     publish: (snapshot: WorldSnapshot, connections: string[]) => void;
+    isAvailable?: (attraction: AttractionId) => boolean;
   }) {
     this.options = options;
     this.lastTick = options.now();
@@ -145,6 +153,25 @@ export class WorldSimulation {
     player.inputZ = z;
     player.inputAt = this.options.now();
     return { ok: true, sequence };
+  }
+
+  interact(playerId: string, attraction: AttractionId):
+    | { ok: true; attraction: AttractionId; label: string; summary: string }
+    | { ok: false; code: "NOT_IN_WORLD" | "TOO_FAR" | "UNAVAILABLE" } {
+    const player = this.players.get(playerId);
+    if (!player || !player.connected) return { ok: false, code: "NOT_IN_WORLD" };
+    if (this.options.isAvailable && !this.options.isAvailable(attraction)) {
+      return { ok: false, code: "UNAVAILABLE" };
+    }
+    const zone = INTERACTION_ZONES[attraction];
+    const distance = Math.hypot(player.x - zone.anchor[0], player.z - zone.anchor[2]);
+    if (distance > zone.radius) return { ok: false, code: "TOO_FAR" };
+    return {
+      ok: true,
+      attraction,
+      label: zone.label,
+      summary: ATTRACTION_DETAILS[attraction].summary,
+    };
   }
 
   tick(now = this.options.now()) {

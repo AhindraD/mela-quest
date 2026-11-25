@@ -104,3 +104,78 @@ test("two and then five browsers see each other move", async ({ page, browser },
     await Promise.all(contexts.map((context) => context.close()));
   }
 });
+
+test("CP-10 proximity prompt, E overlay, Escape focus return, HUD, and independent guest", async ({ page, browser }, testInfo) => {
+  test.setTimeout(60_000);
+  const errors: string[] = [];
+  const contexts: import("@playwright/test").BrowserContext[] = [];
+  await track(page.context());
+  async function attachGuest() {
+    const context = await browser.newContext();
+    await track(context);
+    contexts.push(context);
+    const guest = await context.newPage();
+    guest.on("pageerror", (error) => errors.push(error.message));
+    guest.on("console", (message) => {
+      if (message.type() === "error") errors.push(message.text());
+    });
+    return guest;
+  }
+
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+
+  try {
+    await page.goto("/");
+    await page.getByLabel("Nickname").fill("Mira");
+    await page.getByRole("button", { name: "Create room", exact: true }).click();
+    const invite = await page.getByLabel("Invitation link").inputValue();
+
+    const guest = await attachGuest();
+    await guest.goto(invite);
+    await guest.getByLabel("Nickname").fill("Asha");
+    await guest.getByRole("button", { name: "Join room", exact: true }).click();
+
+    await enterCarnival(page);
+    await enterCarnival(guest);
+
+    await expect(page.getByLabel("Coins: 0")).toBeVisible();
+    await expect(page.getByRole("list", { name: "Carnival roster" })).toContainText("Mira");
+    await expect(page.getByRole("list", { name: "Carnival roster" })).toContainText("Asha");
+    await expect(page.getByRole("button", { name: /Press E to open/ })).toHaveCount(0);
+
+    // Walk toward the Plaza Fountain until proximity prompt appears.
+    await page.keyboard.down("w");
+    await expect(page.getByRole("button", { name: "Press E to open Plaza Fountain" })).toBeVisible({ timeout: 10_000 });
+    await page.keyboard.up("w");
+
+    await page.keyboard.press("e");
+    const dialog = page.getByRole("dialog", { name: "Plaza Fountain" });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Close" })).toBeFocused();
+    await page.locator(".world-preview").screenshot({ path: testInfo.outputPath("cp10-hud-and-modal.png") });
+
+    // Movement is suppressed while modal is open, while Guest continues moving independently.
+    const hostPoseBefore = await remotes(guest);
+    const hostZBefore = hostPoseBefore[0]?.z ?? 0;
+    await page.keyboard.down("w");
+    await page.waitForTimeout(350);
+    await page.keyboard.up("w");
+    const hostPoseAfter = await remotes(guest);
+    expect(hostPoseAfter[0]?.z).toBeCloseTo(hostZBefore, 2);
+
+    await guest.keyboard.down("d");
+    await expect.poll(async () => (await remotes(page)).some((pose) => pose.x > 0.5), { timeout: 8000 }).toBe(true);
+    await guest.keyboard.up("d");
+
+    // Escape closes only the overlay and returns focus to Carnival heading.
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Carnival", exact: true })).toBeFocused();
+    expect(errors).toEqual([]);
+  } finally {
+    await Promise.all(contexts.map((context) => context.close()));
+  }
+});

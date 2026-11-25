@@ -7,6 +7,7 @@ import {
   MAX_SOCKET_MESSAGE_BYTES,
   PROTOCOL_VERSION,
   SOCKET_PATH,
+  attractionInteractSchema,
   createRoomSchema,
   joinRoomSchema,
   leaveRoomSchema,
@@ -143,6 +144,11 @@ export function attachTransport(httpServer: HttpServer) {
       if (!session) return { ok: false as const, code: "NOT_IN_ROOM" as const };
       return world.input(session.playerId, sequence, x, z);
     });
+    const interact = requestHandler(attractionInteractSchema, withinRoomBudget, ({ attraction }) => {
+      const session = rooms.sessionView(socket.id);
+      if (!session) return { ok: false as const, code: "NOT_IN_ROOM" as const };
+      return world.interact(session.playerId, attraction);
+    });
 
     socket.on("transport:ping", handlePing);
     socket.on("room:create", create);
@@ -152,6 +158,7 @@ export function attachTransport(httpServer: HttpServer) {
     socket.on("world:enter", enterWorld);
     socket.on("world:leave", leaveWorld);
     socket.on("player:input", move);
+    socket.on("attraction:interact", interact);
     socket.once("disconnect", () => {
       socket.off("transport:ping", handlePing);
       socket.off("room:create", create);
@@ -161,6 +168,7 @@ export function attachTransport(httpServer: HttpServer) {
       socket.off("world:enter", enterWorld);
       socket.off("world:leave", leaveWorld);
       socket.off("player:input", move);
+      socket.off("attraction:interact", interact);
       rooms.disconnect(socket.id);
     });
   });

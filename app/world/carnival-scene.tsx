@@ -33,7 +33,7 @@ function supportsWebGL() {
   }
 }
 
-export default function CarnivalScene({ surface, kind, color, initial, authoritative, remotes, onInput }: {
+export default function CarnivalScene({ surface, kind, color, initial, authoritative, remotes, onInput, onPositionChange }: {
   surface: RefObject<HTMLElement | null>;
   kind: AvatarKind;
   color: AvatarColor;
@@ -41,6 +41,7 @@ export default function CarnivalScene({ surface, kind, color, initial, authorita
   authoritative: (GroundPoint & { yaw: number }) | null;
   remotes: PlayerPose[];
   onInput: (input: GroundPoint) => void;
+  onPositionChange?: (point: GroundPoint) => void;
 }) {
   const [supported] = useState(supportsWebGL);
   const [ready, setReady] = useState(false);
@@ -69,7 +70,7 @@ export default function CarnivalScene({ surface, kind, color, initial, authorita
             <meshBasicMaterial map={fair.signMap} />
           </mesh>
           <LocalPlayer surface={surface} kind={kind} color={color} initial={initial}
-            authoritative={authoritative} onInput={onInput} />
+            authoritative={authoritative} onInput={onInput} onPositionChange={onPositionChange} />
           <RemotePlayers players={remotes} />
         </Canvas>
       </div>

@@ -40,13 +40,14 @@ function follow(camera: Camera, { x, z }: GroundPoint) {
   camera.lookAt(x * 0.66, 1.75, z * 0.75 - 8.1);
 }
 
-export function LocalPlayer({ surface, kind, color, initial, authoritative, onInput }: {
+export function LocalPlayer({ surface, kind, color, initial, authoritative, onInput, onPositionChange }: {
   surface: RefObject<HTMLElement | null>;
   kind: AvatarKind;
   color: AvatarColor;
   initial: GroundPoint & { yaw: number };
   authoritative: (GroundPoint & { yaw: number }) | null;
   onInput: (input: GroundPoint) => void;
+  onPositionChange?: (point: GroundPoint) => void;
 }) {
   const { get, invalidate, size } = useThree();
   const body = useRef<Group>(null);
@@ -55,14 +56,16 @@ export function LocalPlayer({ surface, kind, color, initial, authoritative, onIn
   const held = useRef(new Set<string>());
   const lastFrame = useRef<number | null>(null);
   const onInputRef = useRef(onInput);
+  const onPositionChangeRef = useRef(onPositionChange);
   const server = useRef(authoritative);
   const serverAt = useRef(0);
 
   useLayoutEffect(() => {
     onInputRef.current = onInput;
+    onPositionChangeRef.current = onPositionChange;
     server.current = authoritative;
     serverAt.current = performance.now();
-  }, [authoritative, onInput]);
+  }, [authoritative, onInput, onPositionChange]);
 
   useLayoutEffect(() => {
     const player = body.current;
@@ -70,6 +73,7 @@ export function LocalPlayer({ surface, kind, color, initial, authoritative, onIn
     player.position.set(position.current.x, 0.14, position.current.z);
     player.rotation.y = yaw.current;
     follow(get().camera, position.current);
+    onPositionChangeRef.current?.(position.current);
     invalidate();
   }, [get, invalidate, size.width, size.height]);
 
@@ -142,6 +146,7 @@ export function LocalPlayer({ surface, kind, color, initial, authoritative, onIn
         player.position.set(reported.x, 0.14, reported.z);
         player.rotation.y = reported.yaw;
         follow(camera, position.current);
+        onPositionChangeRef.current?.(position.current);
       }
     }
 
@@ -170,6 +175,7 @@ export function LocalPlayer({ surface, kind, color, initial, authoritative, onIn
     player.position.set(next.x, 0.14, next.z);
     player.rotation.y = yaw.current;
     follow(camera, next);
+    onPositionChangeRef.current?.(next);
     invalidate();
   });
 

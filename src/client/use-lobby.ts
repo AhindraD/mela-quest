@@ -9,6 +9,7 @@ import {
   inviteCodeSchema,
   resumeRoomSchema,
   type AvatarColor,
+  type AttractionInteractResult,
   type ClientToServerEvents,
   type RoomAdmission,
   type RoomAdmissionResult,
@@ -19,7 +20,7 @@ import {
   type WorldLeaveResult,
   type WorldSnapshot,
 } from "../shared/protocol.ts";
-import type { AvatarKind } from "../shared/world.ts";
+import type { AttractionId, AvatarKind } from "../shared/world.ts";
 
 type LobbySocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 type Credentials = Pick<RoomAdmission, "inviteCode" | "sessionToken">;
@@ -37,6 +38,8 @@ const messages = {
   NOT_IN_ROOM: "You’ve already left this room.",
   NOT_IN_WORLD: "Enter the carnival before moving.",
   STALE_INPUT: "That movement is out of date.",
+  TOO_FAR: "Move closer to the attraction to interact.",
+  UNAVAILABLE: "This attraction is currently closed.",
 };
 
 function readCredentials(invite: string | null): Credentials | null {
@@ -266,11 +269,21 @@ export function useLobby(initialInvite: string | null) {
     void socket.timeout(2000).emitWithAck("player:input", { version, sequence, x, z }).catch(() => undefined);
   }, []);
 
+  const interactAttraction = useCallback(async (attraction: AttractionId): Promise<AttractionInteractResult> => {
+    const socket = socketRef.current;
+    if (!socket?.connected) return { ok: false, code: "NOT_IN_ROOM" };
+    try {
+      return await socket.timeout(5000).emitWithAck("attraction:interact", { version, attraction });
+    } catch {
+      return { ok: false, code: "UNAVAILABLE" };
+    }
+  }, []);
+
   function retry() {
     setError("");
     setConnection("connecting");
     socketRef.current?.disconnect().connect();
   }
 
-  return { invite, room, world, connection, busy, error, enter, leave, retry, enterWorld, leaveWorld, sendInput };
+  return { invite, room, world, connection, busy, error, enter, leave, retry, enterWorld, leaveWorld, sendInput, interactAttraction };
 }

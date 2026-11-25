@@ -14,7 +14,7 @@
 | CP-07 | Local avatar and controls | VERIFIED |
 | CP-08 | Networked movement | VERIFIED |
 | CP-09 | Carnival art pass | VERIFIED |
-| CP-10 | Interaction framework and HUD | NOT_STARTED |
+| CP-10 | Interaction framework and HUD | VERIFIED |
 | CP-11 | Economy and inventory | NOT_STARTED |
 | CP-12 | Balloon game engine | NOT_STARTED |
 | CP-13 | Balloon game UI | NOT_STARTED |
@@ -239,4 +239,29 @@ The user approved Painted Wood (option A) and requested a woman and a cat alongs
 - **Known issues and blockers:** Rendering was measured on ANGLE SwiftShader software WebGL; hardware GPU frame time remains unmeasured. The healthy Docker app remains running on `http://127.0.0.1:3000`.
 - **Decisions (ADR IDs):** None new (follows `ADR-010`, `ADR-013`).
 - **Next action:** CP-10 — Interaction framework and HUD, after approval.
+- **Approval to advance:** pending
+
+## CP-10 — Interaction framework and HUD
+
+- **Status:** VERIFIED
+- **Goal / requirement IDs:** `REQ-MOVE-01`, `REQ-MOVE-02`, and `REQ-A11Y-01` interaction/HUD portions. Proximity prompts, `E` interaction, accessible modal overlays, `Escape` focus return, roster and coins HUD, and server-side distance/availability validation.
+- **Starting commit / baseline:** Clean `HEAD` with CP-09 verified.
+- **Changes and files:**
+  - `src/shared/world.ts` & `src/shared/protocol.ts`: Added `ATTRACTION_IDS`, `ATTRACTION_DETAILS`, `nearestAttraction()`, `attractionInteractSchema`, and `AttractionInteractResult`.
+  - `src/server/world.mts` & `src/server/transport.mts`: Added `WorldSimulation.interact()` (distance, availability, presence checks) and wired `"attraction:interact"` with disconnect cleanup.
+  - `src/client/use-lobby.ts`, `app/lobby.tsx`, `app/world/local-player.tsx`, `app/world/carnival-scene.tsx`, `app/world/carnival-preview.tsx`, `app/globals.css`: Added position-change proximity tracking, `Press E to open <Attraction>` prompt, `Coins: 0` and roster HUD, accessible `role="dialog"` overlay with focus management, and `Escape` closing only the overlay.
+  - `tests/unit/world.test.ts`, `tests/integration/movement.test.ts`, `tests/e2e/movement.spec.ts`: Added unit, socket integration, and two-browser Playwright E2E tests.
+  - Updated `docs/SPECS.md`, `docs/TESTING.md`, and `docs/PROGRESS.md`.
+- **Commands actually executed:**
+  - Host: `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run build` (plus final `npm run lint && npm run typecheck`).
+  - Docker: `docker compose config -q && docker compose up --build -d --wait --wait-timeout 90 && docker compose ps && curl.exe -fsS http://localhost:3000/api/health && docker compose logs --tail=60 app`.
+  - Isolated Docker suites: `npm.cmd run test:integration` and `npx.cmd playwright test --output test-results/cp10`.
+- **Results (exit codes, counts, observed behavior):**
+  - All final commands exited `0`.
+  - Unit: 5 files, 26 tests passed. Integration: 3 files, 8 tests passed (10.67 s). E2E: 8 tests passed (1.2 m) with 0 console/page errors.
+- **Evidence paths or CI run IDs:** `test-results/cp10/` (`cp10-hud-and-modal.png`); Docker manifest digest `sha256:046614560662eeb995389079e4fcca7d09d358383330d62c0c3c7a1109a15c77`.
+- **Manual checks:** PASS — inspected `cp10-hud-and-modal.png` from the Docker-served Chromium session.
+- **Known issues and blockers:** Coins HUD displays `0` until CP-11 (Economy and inventory) implements balances and `economy:updated`. The healthy Docker app remains running on `http://127.0.0.1:3000`.
+- **Decisions (ADR IDs):** None new.
+- **Next action:** CP-11 — Economy and inventory, after approval.
 - **Approval to advance:** pending

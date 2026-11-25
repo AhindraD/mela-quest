@@ -200,3 +200,13 @@ The movement browser check uses Chromium with ANGLE SwiftShader. It records rend
 | Isolated `npx.cmd playwright test --output test-results/cp09` | First run: 6 passed, 1 failed (`movement.spec.ts` timed out at 5000 ms waiting for the 5th concurrent SwiftShader WebGL2 canvas). Raised `toBeVisible` timeout in `tests/e2e/movement.spec.ts` to 15000 ms and reran: all 7 E2E tests passed in 1.7 minutes with zero console errors, zero page errors, and zero failed asset requests. |
 | Rendering measurement (Chromium SwiftShader) | `CP09_RENDER_METRICS`: `29` draw calls, `14428` triangles, `40.6` ms median frame interval across `59` samples on `ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)`. |
 | Screenshot inspection | Inspected `cp09-desktop-1280.png` (1280×720) and `cp09-desktop-1440.png` (1440×900) under `test-results/cp09/`. Confirmed readable signs (`MELA PLAZA`, `BALLOONS`, `MITHAI SHOP`, `DANCE PAVILION`, `FERRIS WHEEL`), connecting paths, and Dance Pavilion diya centerpiece. |
+
+## 12. CP-10 interaction framework and HUD (2026-11-25)
+
+| Check | Observed result |
+| --- | --- |
+| `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run build` | All exited 0. Five unit files, 26 tests passed, including proximity/schema/availability/distance checks in `tests/unit/world.test.ts`. |
+| `docker compose config -q && docker compose up --build -d --wait --wait-timeout 90` | Exit 0. Clean Linux production build (`sha256:046614560662eeb995389079e4fcca7d09d358383330d62c0c3c7a1109a15c77`). `mela-quest-app-1` healthy on `127.0.0.1:3000`; `/api/health` returned `{"status":"ok","service":"mela-io"}`; logs showed no errors. |
+| Isolated `npm.cmd run test:integration` | Exit 0. Three files, 8 tests passed in 10.67 seconds against the CP-10 Docker image, including independent per-client `attraction:interact` distance and spoofed-payload rejection. |
+| Isolated `npx.cmd playwright test --output test-results/cp10` | First run failed in the new CP-10 test because `track()` was omitted on the test contexts. After adding `track()`, all 8 E2E tests passed in 1.2 minutes: prompt appears on approach, `E` opens `Plaza Fountain` dialog and focuses `Close`, `WASD` is suppressed while modal is open, Guest moves independently, `Escape` closes only the modal and returns focus to `Carnival`, and HUD displays `Coins: 0` and roster. |
+| Screenshot inspection | Inspected `cp10-hud-and-modal.png` under `test-results/cp10/`. Confirmed HUD (`Coins: 0`, `Mira`, `Asha`), `Plaza Fountain` modal with focused `Close` button, and both avatars visible in the 3D scene. |

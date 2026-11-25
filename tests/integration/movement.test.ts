@@ -185,3 +185,37 @@ test("disconnect keeps the avatar until grace expiry and resume continues from t
   expect(await guest.timeout(2000).emitWithAck("world:leave", { version })).toEqual({ ok: true });
   await expect.poll(() => guestView.snapshots.at(-1)?.players).toEqual([]);
 }, graceMs + 15_000);
+
+test("server rejects distant or invalid attraction interactions and validates proximity per client", async () => {
+  const [host, guest] = await Promise.all([connect(), connect()]);
+  const hostView = watch(host);
+  const room = admitted(await host.timeout(2000).emitWithAck("room:create", { version, nickname: "Host" }));
+  admitted(await guest.timeout(2000).emitWithAck("room:join", {
+    version, inviteCode: room.inviteCode, nickname: "Guest",
+  }));
+  expect((await host.timeout(2000).emitWithAck("world:enter", { version, avatar: "Man" })).ok).toBe(true);
+  expect((await guest.timeout(2000).emitWithAck("world:enter", { version, avatar: "Woman" })).ok).toBe(true);
+
+  expect(await host.timeout(2000).emitWithAck("attraction:interact", { version, attraction: "fountain" }))
+    .toEqual({ ok: false, code: "TOO_FAR" });
+  expect(await host.timeout(2000).emitWithAck("attraction:interact", {
+    version,
+    attraction: "spoofed" as "fountain",
+  })).toEqual({ ok: false, code: "INVALID_PAYLOAD" });
+
+  let sequence = 1;
+  expect(await host.timeout(2000).emitWithAck("player:input", { version, sequence, x: 0, z: -1 }))
+    .toEqual({ ok: true, sequence });
+  for (let i = 0; i < 12; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 95));
+    sequence += 1;
+    await host.timeout(2000).emitWithAck("player:input", { version, sequence, x: 0, z: -1 });
+  }
+  await expect.poll(() => hostView.snapshots.at(-1)?.players.find((p) => p.playerId === room.playerId)?.z ?? 11,
+    { timeout: 3000 }).toBeLessThan(5.4);
+
+  const result = await host.timeout(2000).emitWithAck("attraction:interact", { version, attraction: "fountain" });
+  expect(result).toMatchObject({ ok: true, attraction: "fountain", label: "Plaza Fountain" });
+  expect(await guest.timeout(2000).emitWithAck("attraction:interact", { version, attraction: "fountain" }))
+    .toEqual({ ok: false, code: "TOO_FAR" });
+}, 15_000);

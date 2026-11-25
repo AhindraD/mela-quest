@@ -40,7 +40,8 @@ export const PLANTING_BEDS: WorldPoint[] = [
   [-11.7, 0, 8.3], [11.7, 0, 8.3], [-13.5, 0, -8], [4.4, 0, -10.6],
 ];
 
-export type AttractionId = keyof typeof LANDMARKS;
+export const ATTRACTION_IDS = ["fountain", "balloonStall", "mithaiShop", "ferrisWheel", "dancePavilion"] as const;
+export type AttractionId = (typeof ATTRACTION_IDS)[number];
 
 export interface InteractionZone {
   id: AttractionId;
@@ -87,3 +88,24 @@ export const INTERACTION_ZONES: Record<AttractionId, InteractionZone> = {
     radius: 5.5,
   },
 };
+
+export const ATTRACTION_DETAILS: Record<AttractionId, { summary: string }> = {
+  fountain: { summary: "Gather around the central plaza fountain and contribute toward the room fireworks show." },
+  balloonStall: { summary: "Pop festive balloons in a 30-second round to earn virtual carnival coins." },
+  mithaiShop: { summary: "Browse traditional sweets and souvenirs from the carnival shopkeeper." },
+  ferrisWheel: { summary: "Board a gondola for a synchronized night view above the fairground." },
+  dancePavilion: { summary: "Celebrate under the marigold garlands and glowing brass diya." },
+};
+
+export function nearestAttraction(x: number, z: number): InteractionZone | null {
+  let best: InteractionZone | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const zone of Object.values(INTERACTION_ZONES)) {
+    const distance = Math.hypot(x - zone.anchor[0], z - zone.anchor[2]);
+    if (distance <= zone.radius && distance < bestDistance) {
+      best = zone;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}

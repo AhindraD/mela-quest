@@ -93,6 +93,12 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
 - **Readable signs:** Five procedural `CanvasTexture` signboards (`MELA PLAZA`, `BALLOONS`, `MITHAI SHOP`, `DANCE PAVILION`, `FERRIS WHEEL`) are batched into a single `signs` mesh using the Painted Wood palette.
 - **Shared interaction geometry:** `INTERACTION_ZONES` in `src/shared/world.ts` defines each attraction's `anchor`, unobstructed `approach` point, and `radius`. Every approach point is verified reachable from `SPAWN_POSITION` via `walk()`.
 
+#### CP-10 interaction framework and HUD
+
+- **Proximity and `E` interaction:** `nearestAttraction(x, z)` computes the closest attraction within its `INTERACTION_ZONES` radius. When in range and no modal is open, a `Press E to open <Attraction>` prompt appears.
+- **Server validation (`attraction:interact`):** Requires `version: 1`, a valid `AttractionId`, active room/world presence (`NOT_IN_ROOM`, `NOT_IN_WORLD`), attraction availability (`UNAVAILABLE`), and server-checked distance (`TOO_FAR`).
+- **Accessible overlay and HUD:** Opening an attraction presents an `aria-modal="true"` dialog that moves focus to its `Close` button, suppresses avatar movement while open, keeps remote players visible and moving, and returns focus to `#world-title` on `Escape` or `Close` without exiting the carnival. The HUD displays session coins (starting at `0`) and the room roster.
+
 ### Session flow
 - **Lobby & Join:** Guests choose a nickname and one of four avatar colors. Creating or joining a room opens its roster and exposes a link of the form `/?invite=<inviteCode>`. The link field can be selected manually if automatic copying fails. Guests may explicitly leave to release their slots.
 - **Interactions:** Proximity prompts appear when near an attraction; pressing `E` sends an interaction request validated by server distance and Flagsmith availability checks.

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { MAX_INPUT_SEQUENCE } from "./movement.ts";
-import { AVATAR_KINDS } from "./world.ts";
+import { ATTRACTION_IDS, AVATAR_KINDS, type AttractionId } from "./world.ts";
 
 export const PROTOCOL_VERSION = 1;
 export const SOCKET_PATH = "/socket.io";
@@ -48,6 +48,10 @@ export const playerInputSchema = z.strictObject({
   sequence: z.number().int().gte(1).lte(MAX_INPUT_SEQUENCE),
   x: z.number().gte(-1).lte(1),
   z: z.number().gte(-1).lte(1),
+});
+export const attractionInteractSchema = z.strictObject({
+  ...roomRequest,
+  attraction: z.enum(ATTRACTION_IDS),
 });
 
 export interface RoomSnapshot {
@@ -100,6 +104,9 @@ export type WorldLeaveResult =
 export type PlayerInputResult =
   | { ok: true; sequence: number }
   | { ok: false; code: "NOT_IN_ROOM" | "NOT_IN_WORLD" | "STALE_INPUT" | "INVALID_PAYLOAD" | "RATE_LIMITED" };
+export type AttractionInteractResult =
+  | { ok: true; attraction: AttractionId; label: string; summary: string }
+  | { ok: false; code: "NOT_IN_ROOM" | "NOT_IN_WORLD" | "TOO_FAR" | "UNAVAILABLE" | "INVALID_PAYLOAD" | "RATE_LIMITED" };
 
 export interface ClientToServerEvents {
   "transport:ping": (request: PingRequest, acknowledge: (result: PingResult) => void) => void;
@@ -110,6 +117,7 @@ export interface ClientToServerEvents {
   "world:enter": (request: z.input<typeof worldEnterSchema>, acknowledge: (result: WorldEnterResult) => void) => void;
   "world:leave": (request: z.input<typeof worldLeaveSchema>, acknowledge: (result: WorldLeaveResult) => void) => void;
   "player:input": (request: z.input<typeof playerInputSchema>, acknowledge: (result: PlayerInputResult) => void) => void;
+  "attraction:interact": (request: z.input<typeof attractionInteractSchema>, acknowledge: (result: AttractionInteractResult) => void) => void;
 }
 
 export interface ServerToClientEvents {
