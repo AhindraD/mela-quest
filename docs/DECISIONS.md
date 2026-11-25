@@ -124,3 +124,27 @@ Append-only record of material architecture and product decisions.
 - **Consequences:** Each tab has one saved room session. Clearing or blocking tab storage removes reload recovery. When a guest explicitly leaves, the page clears their saved session and returns to the create screen.
 - **Validation:** Independent Chromium contexts, invite navigation, and same-tab reload against Docker.
 - **Supersedes:** The open invitation URL choice in CP-00.
+
+## ADR-010 — Painted Wood carnival and avatar lineup
+
+- **Date:** 2026-11-25
+- **Status:** Accepted by the user before CP-06.
+- **Context:** The carnival needs a cozy, readable style that is inexpensive to render in a browser.
+- **Options:** Painted Wood with simple block geometry, Rounded Toy Blocks with selectively beveled geometry, or Folded Paper with more custom faceted shapes.
+- **Decision:** Use Painted Wood (option A). Include a man, a woman, and a cat as selectable avatars, keeping all four accent colors available for every choice.
+- **Rationale:** Simple, reusable primitives and flat materials give the renderer a low-cost starting point. Distinct silhouettes provide character variety while preserving shared movement and interactions.
+- **Consequences:** CP-06 establishes the static world layout. Avatar implementation starts in CP-07, and the detailed carnival art pass remains CP-09.
+- **Validation:** Inspect the Docker-served scene and measure rendering on available hardware during the world checkpoints. No performance benchmark was run during concept selection.
+- **Supersedes:** None.
+
+## ADR-011 — Lazy room preview and shared world coordinates
+
+- **Date:** 2026-11-25
+- **Status:** Accepted
+- **Context:** CP-06 needs a reachable static 3D scene while retaining the existing lobby and invitation flow.
+- **Options:** Mount a canvas in every room immediately, navigate to a separate world route, or open a preview alongside the roster.
+- **Decision:** Put the static preview behind **View carnival** in admitted rooms. Use R3F 9 with Three.js WebGL 2, demand rendering, one orthographic camera, and shared meter-scale world coordinates.
+- **Rationale:** Guests can keep using the room while the preview loads. The lobby does not have to initialize WebGL for every guest, and resizing can preserve the full ground layout.
+- **Consequences:** The preview camera is separate from the future follow camera. Browsers without WebGL 2 see a message and retain room controls.
+- **Validation:** Render, resize, and simulate unavailable WebGL in Chromium against the Docker app.
+- **Supersedes:** None.

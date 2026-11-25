@@ -135,8 +135,43 @@ body {
 .lobby-panel :focus-visible { outline: 2px solid #ffdcaa; outline-offset: 3px; }
 .lobby-panel h2:focus { outline-offset: 6px; }
 
+.world-toggle { width: fit-content; }
+.world-preview {
+  position: relative;
+  min-width: 0;
+  min-height: 540px;
+  overflow: hidden;
+  background: #20172f;
+}
+
+.world-preview h1 {
+  position: absolute;
+  top: 26px;
+  left: 30px;
+  font: 500 2rem/1.05 Georgia, "Times New Roman", serif;
+  letter-spacing: -.025em;
+}
+
+.world-preview h1:focus-visible { outline: 2px solid #ffdcaa; outline-offset: 5px; }
+.world-canvas { position: absolute; inset: 0; }
+.world-message {
+  position: absolute;
+  z-index: 1;
+  inset: 72px 22px 22px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 8px;
+  text-align: center;
+  color: #ebd3be;
+}
+.world-message p { max-width: 34ch; }
+.world-message strong { color: #fff0d9; }
+
 @media (max-width: 800px) {
   .lobby-shell { width: min(560px, calc(100% - 32px)); grid-template-columns: 1fr; margin-block: 16px; min-height: 0; }
   .lobby-poster { min-height: 325px; background-position: center 40%; }
   .lobby-poster h1 { font-size: clamp(2.45rem, 8vw, 3.5rem); }
+  .world-preview { min-height: 390px; }
+  .world-preview h1 { top: 20px; left: 24px; font-size: 1.7rem; }
 }

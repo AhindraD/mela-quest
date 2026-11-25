@@ -37,6 +37,7 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
 | `REQ-NET-01` | Transport | One HTTP listener serves Next.js and accepts same-origin Socket.IO connections. Independently connected clients receive versioned acknowledgments and can reconnect. |
 | `REQ-WORLD-01` | World | Compact, bounded, low-poly night carnival with central plaza & fountain, spawn area, paths, balloon stall, mithai shop, Ferris wheel, decorative stalls, and music/dance area. |
 | `REQ-WORLD-02` | World | Warm lanterns, festive colors, readable signs, and unobstructed spawn. |
+| `REQ-AVATAR-01` | Avatars | Select from a man, a woman, and a cat, with the same four accent colors available for every avatar. Avatars share gameplay rules and use geometry that reads clearly from the third-person camera. |
 | `REQ-MOVE-01` | Movement | Desktop-first third-person camera, `WASD`/Arrow movement (diagonal normalized), `E` to interact, `Escape` to close overlays. |
 | `REQ-MOVE-02` | Movement | Movement input is suppressed when typing in inputs, when modals are open, or on window blur (no stuck keys). |
 | `REQ-MOVE-03` | Movement | Server owns authoritative positions, validates finite numeric inputs, clamps speed/bounds, and broadcasts snapshots at ~15–20 Hz. |
@@ -57,6 +58,21 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
 | `REQ-OPS-02` | Operations | Structured logging without secrets/tokens/raw voice; Prometheus-compatible metrics endpoint (not publicly exposed in deployment). |
 
 ## 4. Gameplay Rules (Baseline)
+
+### Approved art direction (ADR-010)
+
+- **Painted Wood:** An original blocky Indian night fair built from boxes and low-sided primitives with flat, matte colors. Use indigo awnings, ochre paths, warm lanterns and rust-orange trim. Favor a few recognizable silhouettes over dense ornament.
+- **Layout:** A broad entrance faces the central fountain. The balloon stall sits on the left, the mithai shop on the right, and the dance pavilion and Ferris wheel sit at the back. Keep a clear loop around the plaza.
+- **Avatars:** The man and woman share the same block proportions and simple festive clothing, with distinct silhouettes through hair or clothing details. The cat uses a compact body, triangular ears, and a blocky tail. All three use marigold, rose, mint or indigo accents, with movement and interactions shared across choices.
+- **Rendering:** Reuse geometry and materials for repeated objects. Use emissive lantern surfaces and a small shared lighting setup. Start with flat colors and simple contact shadows. Verify actual performance in the browser once there is a scene to measure.
+
+#### CP-06 scene foundation
+
+- **Entry point:** Admitted room guests select **View carnival** to open the static scene alongside the roster. Three.js loads client-side on demand. The preview has loading and WebGL-unavailable states and leaves room controls usable if rendering fails.
+- **Coordinates:** One unit is approximately one metre. +Y is up, +X is right from the entry, and +Z points toward the entrance. The ground spans X from −17 to 17 and Z from −14 to 14. The shared center spawn is `[0, 0, 11]`. The same [world constants](../src/shared/world.ts) provide landmark anchors.
+- **Presentation:** Orthographic preview frames the layout at different window sizes. It renders on demand, caps drawing resolution at 1.5× DPR, and uses no dynamic shadows or postprocessing. All landmark geometry is static and procedural.
+
+### Session flow
 - **Lobby & Join:** Guests choose a nickname and one of four avatar colors. Creating or joining a room opens its roster and exposes a link of the form `/?invite=<inviteCode>`. The link field can be selected manually if automatic copying fails. Guests may explicitly leave to release their slots.
 - **Interactions:** Proximity prompts appear when near an attraction; pressing `E` sends an interaction request validated by server distance and Flagsmith availability checks.
 - **Balloon Game:** 30-second round. Players enter from the Balloon Stall. Server spawns targets on a schedule and validates hits. On round end, coins are credited once and the shared scoreboard is displayed.

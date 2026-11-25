@@ -12,6 +12,7 @@ All visual and audio assets used in Mela.io must be recorded here with their pat
 | Path | Description | Author | Source | License | Attribution | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | `public/assets/lobby-mela.webp` | Decorative illustration of an Indian night fair, compressed to WebP | OpenAI ImageGen, directed for Mela.io | Built-in ImageGen, original generation for CP-05 | Project-generated artwork, no third-party source asset | No external artist credit | Used in the lobby poster |
+| `app/world/carnival-scene.tsx` | Ground and placeholder models for the Painted Wood carnival | Mela.io project | Original procedural Three.js geometry and flat materials | Project source code, no separately licensed models or textures | No external artist credit | Used in the CP-06 room preview |
 
 ### Lobby illustration prompt
 

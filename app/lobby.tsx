@@ -10,6 +10,7 @@ import {
   inviteCodeSchema,
   type AvatarColor,
 } from "../src/shared/protocol.ts";
+import { CarnivalPreview } from "./world/carnival-preview";
 
 const colorLabels: Record<AvatarColor, string> = {
   marigold: "Marigold", rose: "Rose", mint: "Mint", indigo: "Indigo",
@@ -19,7 +20,9 @@ export function Lobby({ initialInvite }: { initialInvite: string | null }) {
   const { invite, room, connection, busy, error, enter, leave, retry } = useLobby(initialInvite);
   const [nickname, setNickname] = useState("");
   const [color, setColor] = useState<AvatarColor>(DEFAULT_AVATAR_COLOR);
+  const [previewRoomId, setPreviewRoomId] = useState<string | null>(null);
   const roomId = room?.snapshot.roomId;
+  const previewOpen = roomId !== undefined && previewRoomId === roomId;
   const heading = useRef<HTMLHeadingElement>(null);
   const previousRoom = useRef<string | undefined>(undefined);
   const isInvitation = invite !== null;
@@ -37,13 +40,15 @@ export function Lobby({ initialInvite }: { initialInvite: string | null }) {
 
   return (
     <main className="lobby-shell">
-      <section className="lobby-poster" aria-labelledby="carnival-title">
-        <p className="lobby-wordmark"><span aria-hidden="true">✷</span> Mela.io</p>
-        <div className="lobby-poster-copy">
-          <h1 id="carnival-title">Welcome to the Festive Carnival</h1>
-          <p>An Indian night fair for you and your friends.</p>
-        </div>
-      </section>
+      {previewOpen ? <CarnivalPreview /> : (
+        <section className="lobby-poster" aria-labelledby="carnival-title">
+          <p className="lobby-wordmark"><span aria-hidden="true">✷</span> Mela.io</p>
+          <div className="lobby-poster-copy">
+            <h1 id="carnival-title">Welcome to the Festive Carnival</h1>
+            <p>An Indian night fair for you and your friends.</p>
+          </div>
+        </section>
+      )}
 
       <section className="lobby-panel" aria-labelledby="lobby-heading">
         {room ? (
@@ -69,6 +74,10 @@ export function Lobby({ initialInvite }: { initialInvite: string | null }) {
                 </li>
               ))}
             </ul>
+            <button className="lobby-secondary world-toggle" type="button" aria-expanded={previewOpen}
+              onClick={() => setPreviewRoomId(previewOpen ? null : room.snapshot.roomId)}>
+              {previewOpen ? "Close carnival preview" : "View carnival"}
+            </button>
           </>
         ) : (
           <>

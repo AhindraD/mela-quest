@@ -138,3 +138,16 @@ Playwright uses the running Docker app at `http://127.0.0.1:3000` by default. Fo
 | `npm.cmd run test:integration` | Exit 0 on the final isolated app at `127.0.0.1:64663` with a 6000 ms reconnect grace. Two files, five tests passed in 6.96 seconds. |
 | `npm.cmd run test:e2e -- --output test-results/cp05-verified` | Exit 0 on the same isolated Docker app. Two tests passed in 4.8 seconds. The first attempt failed because broad alert locators also matched Next's route announcer. Fixed by scoping alerts to the join panel. Failed-run traces remain under `test-results/`. |
 | Screenshot inspection | Inspected the 1280×720 desktop lobby and five-person room, plus a 390 px narrow layout. The test checked for horizontal overflow and masked the invitation URL in the room screenshot. |
+
+## 8. CP-06 scene foundation (2026-11-25)
+
+| Check | Observed result |
+| --- | --- |
+| `npm.cmd ci` | Exit 0. Installed 521 packages, audited 528, and reported zero vulnerabilities. The existing ESLint deprecation warning remains. |
+| `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run test:unit`, `npm.cmd run build` | All exited 0 on the final run. Two unit files, seven tests passed. Initial lint rejected assigning zoom directly to the camera returned by a hook. Reading the active camera from the R3F store inside the layout effect resolved the lint error. |
+| `docker compose config`, `docker compose up --build -d --wait --wait-timeout 90`, `docker compose ps`, `curl.exe -fsS http://localhost:3000/api/health`, `docker compose logs --tail=100 app` | Exit 0. The Linux production build passed. Compose reported a healthy loopback service, readiness returned `status: "ok"`, and startup logs contained no warnings or errors. |
+| `npm.cmd run test:integration` | Exit 0. Two files, five tests passed in 7.20 seconds against an isolated Compose app at `127.0.0.1:52900` with a 6000 ms grace period. |
+| `npm.cmd run test:e2e -- --output test-results/cp06` | Exit 0 on the same isolated Compose app. Four tests passed in 8.4 seconds. The scene opened with a real WebGL 2 context in Chromium, resized its drawing buffer at a 430 px viewport, and showed the fallback on simulated context loss and when WebGL context creation was disabled. Room controls remained usable. |
+| Screenshot inspection | Inspected `carnival-desktop.png` and `carnival-narrow.png` under the CP-06 test output. Both showed the full bounded ground, entrance and placeholder landmarks. |
+
+To reproduce the scene check, create a room in the Docker app and select **View carnival**. The Playwright scene spec uses Chromium with ANGLE SwiftShader to make software-rendered functional verification reproducible. These runs provide no hardware GPU performance benchmark.

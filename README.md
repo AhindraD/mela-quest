@@ -30,6 +30,7 @@ docker compose up --build -d
 ```
 - Open `http://127.0.0.1:3000` after `docker compose ps` reports the app healthy.
 - Enter a nickname, choose an avatar color, and select **Create room**. Share the link from the roster. Guests open the link and select **Join room**.
+- Select **View carnival** in your room to see the static 3D layout. The preview requires WebGL 2.
 - With the default localhost binding, try guest links in separate browser profiles on the same machine.
 - The environment file is optional for the current build.
 - **Shutdown:** `docker compose down`
@@ -52,7 +53,7 @@ Implemented in `CP-01`:
 | NudgeBee | Operational monitoring & incident investigation | `NOT_STARTED` (planned CP-23) |
 
 ## Known Limitations
-- The browser lobby is available. The 3D scene and gameplay arrive in later checkpoints.
+- The carnival preview is static. Avatar movement and gameplay arrive in later checkpoints.
 - Room state is held in memory. Server restarts invalidate existing invites and guest sessions.
 
 ## Documentation

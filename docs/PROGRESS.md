@@ -10,7 +10,7 @@
 | CP-03 | Socket transport and protocol | VERIFIED |
 | CP-04 | Authoritative room manager | VERIFIED |
 | CP-05 | Lobby and invitation flow | VERIFIED |
-| CP-06 | 3D scene foundation | NOT_STARTED |
+| CP-06 | 3D scene foundation | VERIFIED |
 | CP-07 | Local avatar and controls | NOT_STARTED |
 | CP-08 | Networked movement | NOT_STARTED |
 | CP-09 | Carnival art pass | NOT_STARTED |
@@ -154,4 +154,23 @@
 - **Known issues and blockers:** Loopback links support testing on the same machine. Rooms are process-local. The healthy app remains running.
 - **Decisions:** `ADR-009`.
 - **Next action:** CP-06 — 3D scene foundation.
+- **Approval to advance:** approved (2026-11-25)
+
+### Design decision before CP-06
+
+The user approved Painted Wood (option A) and requested a woman and a cat alongside the man avatar. The layout, rendering approach, and avatar lineup are recorded in `ADR-010` and the specifications.
+
+## CP-06 — 3D scene foundation
+
+- **Status:** VERIFIED
+- **Goal / requirement IDs:** `REQ-WORLD-01`, `REQ-WORLD-02`, and the WebGL fallback portion of `REQ-A11Y-01`. Add a static client-only scene preview to admitted rooms, with shared world coordinates, responsive framing, and loading and error states.
+- **Starting commit / baseline:** CP-05 at `fa50e0a` plus the approved Painted Wood documentation.
+- **Changes and files:** Added the client-only room preview in `app/world/`, shared scene coordinates, static Painted Wood landmark placeholders, fallback and loading UI, and Chromium coverage. Pinned React Three Fiber 9.8.2 and Three.js 0.187.0.
+- **Commands actually executed:** `npm ci`, lint, typecheck, unit and integration tests, host build, Compose config/build/start/status/logs, HTTP readiness, and Chromium E2E. See [TESTING.md](TESTING.md).
+- **Results:** Seven unit, five integration, and four E2E tests passed. Browser tests verified rendering, resize, unavailable WebGL, context loss, and room use with the fallback.
+- **Evidence:** `test-results/cp06/world-renders-the-carnival-in-WebGL-and-resizes-the-scene/`. Final Docker manifest digest `sha256:f7bed5e9e8379bf1c91effa2a883e89bfd64fd6eecf2171a4af364bfa34c623a`.
+- **Manual checks:** PASS. Inspected desktop and narrow viewport screenshots from the Docker-served scene. All five landmarks and the entrance were visible. The Chromium render check reported no uncaught errors or console errors.
+- **Known issues and blockers:** The preview is static. Chromium ran with SwiftShader for functional evidence. Hardware GPU performance remains unmeasured. The app remains healthy on localhost.
+- **Decisions:** `ADR-010`, `ADR-011`.
+- **Next action:** CP-07 — Local avatar and controls.
 - **Approval to advance:** pending
