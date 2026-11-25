@@ -28,8 +28,8 @@ body {
   flex-direction: column;
   justify-content: space-between;
   padding: clamp(28px, 4vw, 54px);
-  background: linear-gradient(180deg, #19101e94, transparent 28%, #19101e1a 47%, #18101ff7 95%),
-    #30203a url("/assets/lobby-mela.webp") center 48% / cover no-repeat;
+  background: #1b1731;
+  gap: 12px;
 }
 
 .lobby-wordmark {
@@ -136,6 +136,17 @@ body {
 .lobby-panel h2:focus { outline-offset: 6px; }
 
 .world-toggle { width: fit-content; }
+.world-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 10px; }
+.world-entry label { grid-column: 1 / -1; font-size: .875rem; font-weight: 650; }
+.world-entry select {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #705b6e;
+  border-radius: 9px;
+  padding-inline: 10px;
+  background: #17121f;
+  color: #f8ecd9;
+}
 .world-preview {
   position: relative;
   min-width: 0;
@@ -144,12 +155,28 @@ body {
   background: #20172f;
 }
 
-.world-preview h1 {
+.world-preview-header {
   position: absolute;
   top: 26px;
   left: 30px;
+  right: 22px;
+  pointer-events: none;
+}
+
+.world-preview h1 {
+  width: fit-content;
   font: 500 2rem/1.05 Georgia, "Times New Roman", serif;
   letter-spacing: -.025em;
+}
+
+.world-preview-header p {
+  width: fit-content;
+  margin-top: 7px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  color: #f8ecd9;
+  background: #20172fe8;
+  font-size: .85rem;
 }
 
 .world-preview h1:focus-visible { outline: 2px solid #ffdcaa; outline-offset: 5px; }
@@ -173,5 +200,32 @@ body {
   .lobby-poster { min-height: 325px; background-position: center 40%; }
   .lobby-poster h1 { font-size: clamp(2.45rem, 8vw, 3.5rem); }
   .world-preview { min-height: 390px; }
-  .world-preview h1 { top: 20px; left: 24px; font-size: 1.7rem; }
+  .world-preview-header { top: 20px; left: 24px; }
+  .world-preview h1 { font-size: 1.7rem; }
+}
+
+.world-preview { background: radial-gradient(ellipse at 50% 63%, #423044 0%, #231c33 53%, #16152b 90%); }
+@media (min-width: 801px) {
+  .lobby-shell:has(.world-preview) {
+    width: min(1400px, calc(100% - 44px));
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 30%);
+  }
+}
+
+.painted-fair-illustration {
+  align-self: center;
+  width: min(100%, 410px);
+  aspect-ratio: 780 / 730;
+  background: url("/assets/painted-wood-a.webp") left center / 141.03% auto no-repeat;
+}
+.avatar-portrait {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: 108px;
+  aspect-ratio: 3 / 4;
+  background: url("/assets/painted-avatars.webp") no-repeat;
+  background-size: 400% 300%;
+}
+@media (max-width: 800px) {
+  .painted-fair-illustration { width: min(100%, 250px); }
 }

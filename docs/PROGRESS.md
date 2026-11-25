@@ -11,7 +11,7 @@
 | CP-04 | Authoritative room manager | VERIFIED |
 | CP-05 | Lobby and invitation flow | VERIFIED |
 | CP-06 | 3D scene foundation | VERIFIED |
-| CP-07 | Local avatar and controls | NOT_STARTED |
+| CP-07 | Local avatar and controls | VERIFIED |
 | CP-08 | Networked movement | NOT_STARTED |
 | CP-09 | Carnival art pass | NOT_STARTED |
 | CP-10 | Interaction framework and HUD | NOT_STARTED |
@@ -173,4 +173,28 @@ The user approved Painted Wood (option A) and requested a woman and a cat alongs
 - **Known issues and blockers:** The preview is static. Chromium ran with SwiftShader for functional evidence. Hardware GPU performance remains unmeasured. The app remains healthy on localhost.
 - **Decisions:** `ADR-010`, `ADR-011`.
 - **Next action:** CP-07 — Local avatar and controls.
+- **Approval to advance:** approved (2026-11-25)
+
+## CP-07 — Local avatar and controls
+
+- **Status:** VERIFIED
+- **Goal / requirement IDs:** `REQ-AVATAR-01`, local movement and camera portions of `REQ-MOVE-01` and `REQ-MOVE-02`. Add three local avatars, keyboard movement, shared collisions and a follow camera.
+- **Starting commit / baseline:** CP-05 commit `fa50e0a` with verified, uncommitted CP-06 and Painted Wood design changes in the working tree.
+- **Changes and files:** Added procedural man, woman and cat models, the local avatar selector, focus-scoped controls, the third-person camera, and shared collision geometry and movement math. Added movement unit cases and extended the Docker-served Chromium tests.
+- **Commands actually executed:** `npm ci`, lint, typecheck, unit/integration tests, host build, Compose config/build/start/status/logs, HTTP readiness and Chromium E2E. See [TESTING.md](TESTING.md).
+- **Results:** Fifteen unit, five integration, and five E2E tests passed. Unit tests cover all four directions, normalized speed across four simulated frame rates, landmark collision and world boundaries. Chromium covers avatar selection, movement and follow framing, focus interruptions, and keyboard return to the room.
+- **Evidence:** `test-results/cp07-verified/`. Final Docker image manifest digest `sha256:ba6380b2969524f24fd870eb68a9409d6a6d305c78aa2c728d7ffba7705b85c6`.
+- **Manual checks:** PASS. Inspected man, woman and cat shots at the entrance and the follow-camera shot near the fountain. Chromium reported no uncaught browser errors on the tested path.
+- **Known issues and blockers:** Avatar type and movement are local. The browser checks used software WebGL. The local Docker service remains healthy.
+- **Decisions:** `ADR-010`, `ADR-012`.
+- **Next action:** CP-08 — Networked movement.
 - **Approval to advance:** pending
+
+### CP-07 visual revision — Prototype A
+- **Status:** VERIFIED for implementation and regression checks. Owner visual sign-off pending.
+- **Baseline:** CP-07 local-play working tree at HEAD `4860424`. The original A sheet was recovered and saved with the project.
+- **Gaps addressed:** The previous close camera cut off the booths and wheel. The revised view frames both foreground stalls, tiered fountain, rear pavilion and wheel. The polygon fence curves toward the lantern gate. The character picker uses portraits of all playable models. Updated the world mesh, movement bounds, avatar geometry, lobby, source inventory and visual specs.
+- **Evidence:** [Prototype A alongside the Docker-served game](design/painted-wood-comparison.webp). Original captures and three avatar views in `test-results/painted-wood-reviewed/`. Desktop and narrow visual review PASS.
+- **Commands:** npm ci, lint, typecheck, test:unit, build, Compose config/up/ps/logs, HTTP health probe, test:integration and test:e2e. All final checks exited 0. Passed 17 unit, 5 socket integration and 5 browser tests. See TESTING.md for the initial failures and reruns.
+- **Decision and limitations:** ADR-013. The playable rendition retains wider routes and simpler lighting than the reference. Software WebGL verified rendering and controls. Device GPU performance is unmeasured.
+- **Next action:** Owner review of the visual match. CP-08 approval pending.

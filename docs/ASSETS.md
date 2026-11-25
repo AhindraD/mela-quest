@@ -11,8 +11,11 @@ All visual and audio assets used in Mela.io must be recorded here with their pat
 
 | Path | Description | Author | Source | License | Attribution | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| `public/assets/lobby-mela.webp` | Decorative illustration of an Indian night fair, compressed to WebP | OpenAI ImageGen, directed for Mela.io | Built-in ImageGen, original generation for CP-05 | Project-generated artwork, no third-party source asset | No external artist credit | Used in the lobby poster |
-| `app/world/carnival-scene.tsx` | Ground and placeholder models for the Painted Wood carnival | Mela.io project | Original procedural Three.js geometry and flat materials | Project source code, no separately licensed models or textures | No external artist credit | Used in the CP-06 room preview |
+| `public/assets/lobby-mela.webp` | Decorative illustration of an Indian night fair, compressed to WebP | OpenAI ImageGen, directed for Mela.io | Built-in ImageGen, original generation for CP-05 | Project-generated artwork, no third-party source asset | No external artist credit | Historical CP-05 poster |
+| `app/world/painted-fair.ts` | Batched timber fairground, stalls, pavilion, wheel, fountain and lighting for the Painted Wood carnival | Mela.io project | Original procedural Three.js geometry and flat materials | Project source code, no separately licensed models or textures | No external artist credit | Used in the playable carnival |
+| `app/world/avatar.tsx` | Playable man, woman, and cat models | Mela.io project | Original beveled blocks and low-sided primitives with flat materials | Project source code, no separately licensed models or textures | No external artist credit | Used for CP-07 local avatars |
+| `public/assets/painted-wood-a.webp` | Approved Prototype A design sheet, cropped by CSS for the lobby | OpenAI ImageGen, directed for Mela.io | Original concept image ending in `5fe503cc64ba.png`, resized to WebP | Project-generated artwork | No external artist credit | Design reference and lobby |
+| `public/assets/painted-avatars.webp` | 4 accent columns × 3 character rows | Mela.io project | Transparent Chromium renders of the playable meshes | Project-generated artwork | No external artist credit | Room avatar picker |
 
 ### Lobby illustration prompt
 

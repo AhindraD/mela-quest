@@ -2,7 +2,9 @@
 
 A cozy, browser-based 3D Indian festive carnival ("mela") for private groups of up to five players to explore, play mini-games, ride attractions, chat with a multilingual shopkeeper, and celebrate together.
 
-Create a private room for up to five players, choose an avatar color, and invite friends from the browser lobby. The roster updates as guests join, reconnect, or leave. [Progress ledger](docs/PROGRESS.md)
+Create a private room for up to five players, choose an avatar color, and invite friends from the browser lobby. Pick a man, woman, or cat and walk through the Painted Wood fairground. The roster updates as guests join, reconnect, or leave. [Progress ledger](docs/PROGRESS.md)
+
+Prototype A and the playable entrance appear side by side in the [visual comparison](docs/design/painted-wood-comparison.webp).
 
 ## Planned Features (Roadmap)
 - Private invite-only rooms (max 5 players including host) with server-authoritative state
@@ -30,7 +32,7 @@ docker compose up --build -d
 ```
 - Open `http://127.0.0.1:3000` after `docker compose ps` reports the app healthy.
 - Enter a nickname, choose an avatar color, and select **Create room**. Share the link from the roster. Guests open the link and select **Join room**.
-- Select **View carnival** in your room to see the static 3D layout. The preview requires WebGL 2.
+- Choose **Man**, **Woman**, or **Cat**, then select **Enter carnival**. Use WASD or the arrow keys to move and Escape to return to the room. Local play requires WebGL 2.
 - With the default localhost binding, try guest links in separate browser profiles on the same machine.
 - The environment file is optional for the current build.
 - **Shutdown:** `docker compose down`
@@ -53,7 +55,7 @@ Implemented in `CP-01`:
 | NudgeBee | Operational monitoring & incident investigation | `NOT_STARTED` (planned CP-23) |
 
 ## Known Limitations
-- The carnival preview is static. Avatar movement and gameplay arrive in later checkpoints.
+- Avatar movement is local to each browser. Networked movement and attractions arrive in later checkpoints.
 - Room state is held in memory. Server restarts invalidate existing invites and guest sessions.
 
 ## Documentation

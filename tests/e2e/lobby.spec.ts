@@ -45,12 +45,12 @@ test("keyboard host, shared invite, five players, sixth rejection, isolation and
     const inviteInput = page.getByLabel("Invitation link");
     const invite = await inviteInput.inputValue();
     expect(new URL(invite).searchParams.get("invite")).toMatch(/^[A-Za-z0-9_-]{22}$/);
-    await expect(page.getByRole("img", { name: "Rose" })).toBeVisible();
+    await expect(page.getByRole("img", { name: "Rose", exact: true })).toBeVisible();
 
     const first = await guestPage();
     await enterInvitation(first, invite, "Asha");
     await expect(first.getByRole("list", { name: "Guests" })).toContainText("Mira");
-    await expect(first.getByRole("img", { name: "Rose" })).toBeVisible();
+    await expect(first.getByRole("img", { name: "Rose", exact: true })).toBeVisible();
     await expect(page.getByRole("list", { name: "Guests" })).toContainText("Asha");
     await first.reload();
     await expect(first.getByRole("heading", { name: "Your room" })).toBeVisible();

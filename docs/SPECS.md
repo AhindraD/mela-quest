@@ -61,6 +61,7 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
 
 ### Approved art direction (ADR-010)
 
+- **Visual target:** The [approved Prototype A sheet](../public/assets/painted-wood-a.webp) defines the entrance composition, landmark silhouettes and character proportions. Show both shops, the pavilion, wheel and tiered fountain together when the guest enters. Use scalloped indigo awnings, strings of square lanterns, a timber fence with pennants, ochre pavers, cream clothing and a diagonal accent sash.
 - **Painted Wood:** An original blocky Indian night fair built from boxes and low-sided primitives with flat, matte colors. Use indigo awnings, ochre paths, warm lanterns and rust-orange trim. Favor a few recognizable silhouettes over dense ornament.
 - **Layout:** A broad entrance faces the central fountain. The balloon stall sits on the left, the mithai shop on the right, and the dance pavilion and Ferris wheel sit at the back. Keep a clear loop around the plaza.
 - **Avatars:** The man and woman share the same block proportions and simple festive clothing, with distinct silhouettes through hair or clothing details. The cat uses a compact body, triangular ears, and a blocky tail. All three use marigold, rose, mint or indigo accents, with movement and interactions shared across choices.
@@ -71,6 +72,13 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
 - **Entry point:** Admitted room guests select **View carnival** to open the static scene alongside the roster. Three.js loads client-side on demand. The preview has loading and WebGL-unavailable states and leaves room controls usable if rendering fails.
 - **Coordinates:** One unit is approximately one metre. +Y is up, +X is right from the entry, and +Z points toward the entrance. The ground spans X from −17 to 17 and Z from −14 to 14. The shared center spawn is `[0, 0, 11]`. The same [world constants](../src/shared/world.ts) provide landmark anchors.
 - **Presentation:** Orthographic preview frames the layout at different window sizes. It renders on demand, caps drawing resolution at 1.5× DPR, and uses no dynamic shadows or postprocessing. All landmark geometry is static and procedural.
+
+#### CP-07 local play
+
+- **Entry and focus:** Choose **Man**, **Woman**, or **Cat** in the room and select **Enter carnival**. The local form reuses the guest's room accent color. Entering or clicking the scene focuses movement. Moving focus to room or text controls, opening a dialog, hiding the tab, or blurring the window clears held keys. Escape returns to the room and focuses **Enter carnival**.
+- **Movement:** WASD and arrow keys move at five world units per second across the ground plane, with diagonals capped to the same speed. Elapsed time drives motion. A frame is capped at 100 ms and subdivided into steps at most 0.12 units to limit large jumps and obstacle tunneling.
+- **Collision and camera:** Every avatar has the same 0.45-unit collision radius. Ground bounds and the shared landmark footprints block movement and support sliding along edges. The perspective camera translates with the avatar while keeping the entrance-to-plaza orientation fixed.
+- **Session scope:** The character choice is local to the page. Re-entering starts the avatar at the shared spawn. Position and avatar type are not sent over Socket.IO in this checkpoint.
 
 ### Session flow
 - **Lobby & Join:** Guests choose a nickname and one of four avatar colors. Creating or joining a room opens its roster and exposes a link of the form `/?invite=<inviteCode>`. The link field can be selected manually if automatic copying fails. Guests may explicitly leave to release their slots.

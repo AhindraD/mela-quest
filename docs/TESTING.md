@@ -151,3 +151,24 @@ Playwright uses the running Docker app at `http://127.0.0.1:3000` by default. Fo
 | Screenshot inspection | Inspected `carnival-desktop.png` and `carnival-narrow.png` under the CP-06 test output. Both showed the full bounded ground, entrance and placeholder landmarks. |
 
 To reproduce the scene check, create a room in the Docker app and select **View carnival**. The Playwright scene spec uses Chromium with ANGLE SwiftShader to make software-rendered functional verification reproducible. These runs provide no hardware GPU performance benchmark.
+
+## 9. CP-07 local avatar and controls (2026-11-25)
+
+| Check | Observed result |
+| --- | --- |
+| `npm.cmd ci` | Exit 0. Installed 521 packages, audited 528 and reported zero vulnerabilities. Existing ESLint deprecation warning present. |
+| `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run test:unit`, `npm.cmd run build` | Exit 0. Three unit files, fifteen tests passed. The movement suite checked cardinal directions, equal diagonal speed at 15, 30, 60 and 120 simulated FPS, all four map boundaries, fountain and stall collision, sliding, and long-frame capping. |
+| `docker compose config`, `docker compose up --build -d --wait --wait-timeout 90`, `docker compose ps`, `curl.exe -fsS http://localhost:3000/api/health`, `docker compose logs --tail=100 app` | Exit 0. The production image built and started healthy on loopback. Readiness returned `status: "ok"`; startup logs showed no warnings or errors. |
+| `npm.cmd run test:integration` | Exit 0. Two files, five tests passed in 7.08 seconds against the final isolated Compose app at `127.0.0.1:53062` with a 6000 ms reconnect grace period. |
+| `npm.cmd run test:e2e -- --output test-results/cp07-verified` | Exit 0. Five tests passed in 21.6 seconds. Chromium verified all three avatar choices, movement with WASD/arrows, a stable position at the fence, camera follow, pause on text focus, modal focus and window blur, and Escape returning focus to the room button. The first run's no-motion comparison also captured the focus ring. The corrected comparison masks just the header while leaving keyboard focus intact. The failed trace is under `test-results/cp07/`. |
+| Screenshot inspection | Examined all three avatar silhouettes at spawn and the cat follow view at the fountain. Images are kept under `test-results/cp07-verified/`. The renderer used ANGLE SwiftShader for these functional checks. |
+
+To reproduce in the browser, choose an avatar and select **Enter carnival**. Walk toward the fountain, move sideways along its edge, then walk back toward the entrance fence. Focus the invitation field while holding a key and verify movement stops. Focus the carnival again and verify movement resumes only on a fresh keypress. Press Escape to return to the room.
+
+### CP-07 Prototype A revision, 2026-11-25
+
+The source image for visual review is [Painted Wood A](../public/assets/painted-wood-a.webp). Compare the pavilion and wheel on the back skyline, merchandise and awnings on the two foreground stalls, fountain tiers, entrance lanterns, and character silhouette. The current picker contains twelve portraits baked from the same playable meshes. The source sheet depicts the man. The woman and cat are original extensions of the selected style.
+
+Intermediate runs exposed two obsolete straight walking routes that crossed new planting beds, a color assertion that also matched the new portrait, and unreliable screenshot comparisons during focus changes. One pair of 864 × 658 idle frames differed in only 40 pixels by one channel level. The movement test now reads the avatar and camera transforms actually rendered by Chromium through Three's inspection events, polls until the fence is reached, and asserts identical transforms during focus, modal and blur checks. Screenshots still cover the visual result and character switching. Corner and planting-bed contact have separate unit checks. An intermediate lint run also included the temporary portrait bake bundle. Archiving that disposable source restored normal source discovery.
+
+Final run: clean host install exited 0 (521 packages installed). Lint, typecheck, 17 unit tests, production build, Compose config and image startup passed. The final lint rerun removed one unused palette entry. Compose reported healthy at `127.0.0.1:3000`, the HTTP health probe returned `status: ok`, and the app logs showed normal startup. An isolated copy at `127.0.0.1:54043` with 6000 ms reconnect grace passed all 5 socket integration tests in 7.02 seconds and all 5 Chromium tests in 25.0 seconds. Browser error assertions passed. Desktop and narrow WebGL captures are in `test-results/painted-wood-reviewed/`. [Reference and final entrance](design/painted-wood-comparison.webp). Chromium used SwiftShader for functional verification. Hardware frame time was not measured.

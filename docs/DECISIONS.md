@@ -148,3 +148,24 @@ Append-only record of material architecture and product decisions.
 - **Consequences:** The preview camera is separate from the future follow camera. Browsers without WebGL 2 see a message and retain room controls.
 - **Validation:** Render, resize, and simulate unavailable WebGL in Chromium against the Docker app.
 - **Supersedes:** None.
+
+## ADR-012 — Local movement and fixed-heading follow camera
+
+- **Date:** 2026-11-25
+- **Status:** Accepted
+- **Context:** CP-07 needs responsive movement and readable controls in the compact carnival before networking.
+- **Options:** Add orbit-relative movement and a physics engine, or keep a fixed heading and shared ground-plane movement.
+- **Decision:** Use a fixed-heading perspective follow camera, focus-scoped keyboard controls, elapsed-time ground movement and shared landmark collision footprints. Keep the new avatar choices local.
+- **Rationale:** The cardinal controls stay predictable. Simple circle and box checks are sufficient for the current static obstacles and can be reused by the authoritative simulation.
+- **Consequences:** The camera follows from a consistent side. Character selection and positions remain local until later checkpoints. Long stalls cap movement for the affected frame.
+- **Validation:** Test normal and diagonal speed at several frame rates, collision and boundary behavior, then verify input and follow framing in the Docker-served browser.
+- **Supersedes:** The fixed overview camera in ADR-011.
+
+## ADR-013 — Painted Wood entrance composition
+
+- **Date and status:** 2026-11-25, accepted implementation decision under ADR-010.
+- **Context and options:** The close follow camera cropped the concept's two foreground stalls. An elevated follow view can preserve the player's movement cues and reveal the whole fair at spawn.
+- **Decision:** Fit the camera distance to the scene aspect ratio, follow a fraction of the avatar's displacement and widen the desktop scene. Use the original sheet in the lobby and render the picker portraits from the actual meshes.
+- **Rationale and consequences:** The avatar occupies less of the entrance view. The picker provides a close-up with the selected accent. Three batched meshes cover the static fair, bulbs and halos. A small procedural ground texture handles soft grounding. Lighting requires no per-lantern lights or shadow maps.
+- **Validation and reversal:** Compare the approved sheet with the desktop and narrow Chromium captures and exercise movement and focus. Revisit the framing if player navigation suffers.
+- **Supersedes:** The close framing of ADR-012.

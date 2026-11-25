@@ -1,4 +1,6 @@
 export type WorldPoint = [x: number, y: number, z: number];
+export const AVATAR_KINDS = ["Man", "Woman", "Cat"] as const;
+export type AvatarKind = (typeof AVATAR_KINDS)[number];
 
 // One unit is roughly one metre. X points right from the entrance,
 // Y points up, and positive Z points toward the entrance.
@@ -13,3 +15,27 @@ export const LANDMARKS = {
   ferrisWheel: [9, 0, -8],
   dancePavilion: [-9, 0, -8],
 } satisfies Record<string, WorldPoint>;
+
+export const LANDMARK_FOOTPRINTS = {
+  fountainRadius: 3.83,
+  stall: { width: 5.85, depth: 3.85 },
+  ferrisWheel: { width: 8.1, depth: 3.9 },
+  dancePavilion: { width: 7.6, depth: 5.62 },
+  pavilionStep: { width: 4.1, depth: 1.18, offsetZ: 3.17 },
+} as const;
+
+export const LANTERN_POSITIONS: WorldPoint[] = [
+  [-3.35, 0, 13.55], [3.35, 0, 13.55],
+  [-7.4, 0, -1.7], [7.4, 0, -1.7],
+  [-14.5, 0, 8], [14.5, 0, 8],
+];
+
+// Convex outline shared by the island mesh, fence rails and collision planes.
+
+export const FAIR_PERIMETER = [
+  [-12, -14], [12, -14], [17, -9], [17, 6], [13, 10.9], [8, 13], [3, 14], [-3, 14], [-8, 13], [-13, 10.9], [-17, 6], [-17, -9],
+] as const;
+
+export const PLANTING_BEDS: WorldPoint[] = [
+  [-11.7, 0, 8.3], [11.7, 0, 8.3], [-13.5, 0, -8], [4.4, 0, -10.6],
+];
