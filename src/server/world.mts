@@ -137,6 +137,11 @@ export class WorldSimulation {
     return { ok: true };
   }
 
+  pose(playerId: string): { x: number; z: number } | null {
+    const player = this.players.get(playerId);
+    return player && player.connected ? { x: player.x, z: player.z } : null;
+  }
+
   input(playerId: string, sequence: number, x: number, z: number):
     | { ok: true; sequence: number }
     | { ok: false; code: "NOT_IN_WORLD" | "STALE_INPUT" | "INVALID_PAYLOAD" } {

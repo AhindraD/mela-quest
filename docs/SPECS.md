@@ -105,6 +105,12 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
 - **Authoritative `EconomyManager` (`src/server/economy.mts`):** Tracks session-only integer balances and item counts per player, enforces idempotent `transactionId` keys (returning the original result on duplicates), rejects non-integer/non-positive amounts, rejects insufficient funds without negative balances, and rejects cross-room mutations (`ROOM_MISMATCH`). No public mint endpoint exists.
 - **Session sync (`economy:updated`):** Emitted to the player's connection on admission and `room:resume`, preserving balances and inventory across transient disconnects while the server process lives.
 
+#### CP-12 balloon game engine
+
+- **Schedule & round (`src/shared/balloon.ts`, `src/server/balloon-game.mts`):** 30-second round (`BALLOON_ROUND_MS = 30000`) with 24 deterministic per-player targets (`generateBalloonTargets`) and a shared room scoreboard.
+- **Validation & rate limits:** `game:join` checks Balloon Stall proximity (`TOO_FAR`); `game:hit` validates `roundId`, `targetId` ownership, spawn/despawn timing (`TOO_EARLY`, `TOO_LATE`), duplicate hits (`DUPLICATE_HIT`), and bounded hit rate (`BALLOON_MIN_HIT_INTERVAL_MS = 80`, socket budget `BALLOON_HIT_RATE_LIMIT = 15`/s).
+- **One-time reward & cleanup:** When `now >= endsAt`, `BalloonGameManager.tick()` settles the round and credits `balloonRewardCoins(score)` once per participant via idempotent key `balloon:<roundId>:<playerId>`. Disconnects (`unbound` / `removed`) and `game:leave` clean up participants and empty rounds. Concurrent rooms remain isolated.
+
 ### Session flow
 - **Lobby & Join:** Guests choose a nickname and one of four avatar colors. Creating or joining a room opens its roster and exposes a link of the form `/?invite=<inviteCode>`. The link field can be selected manually if automatic copying fails. Guests may explicitly leave to release their slots.
 - **Interactions:** Proximity prompts appear when near an attraction; pressing `E` sends an interaction request validated by server distance and Flagsmith availability checks.

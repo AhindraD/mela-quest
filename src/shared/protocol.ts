@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { MAX_INPUT_SEQUENCE } from "./movement.ts";
+import type { BalloonTarget } from "./balloon.ts";
 import { ATTRACTION_IDS, AVATAR_KINDS, type AttractionId } from "./world.ts";
 
 export const PROTOCOL_VERSION = 1;
@@ -53,6 +54,13 @@ export const attractionInteractSchema = z.strictObject({
   ...roomRequest,
   attraction: z.enum(ATTRACTION_IDS),
 });
+export const gameJoinSchema = z.strictObject(roomRequest);
+export const gameLeaveSchema = z.strictObject(roomRequest);
+export const gameHitSchema = z.strictObject({
+  ...roomRequest,
+  roundId: z.string().min(1).max(64),
+  targetId: z.string().min(1).max(160),
+});
 
 export interface RoomSnapshot {
   version: typeof PROTOCOL_VERSION;
@@ -104,6 +112,27 @@ export interface EconomySnapshot {
   inventory: Record<string, number>;
 }
 
+export interface BalloonScoreEntry {
+  playerId: string;
+  nickname: string;
+  color: AvatarColor;
+  score: number;
+  rewardCoins: number;
+}
+
+export interface BalloonGameState {
+  version: typeof PROTOCOL_VERSION;
+  roomId: string;
+  roundId: string;
+  phase: "active" | "ended";
+  startedAt: number;
+  endsAt: number;
+  serverTime: number;
+  targets: BalloonTarget[];
+  poppedTargetIds: string[];
+  scoreboard: BalloonScoreEntry[];
+}
+
 export type WorldEnterResult = { ok: true; pose: PlayerPose } | RoomError | RequestError;
 export type WorldLeaveResult =
   | { ok: true }
@@ -115,6 +144,28 @@ export type PlayerInputResult =
 export type AttractionInteractResult =
   | { ok: true; attraction: AttractionId; label: string; summary: string }
   | { ok: false; code: "NOT_IN_ROOM" | "NOT_IN_WORLD" | "TOO_FAR" | "UNAVAILABLE" | "INVALID_PAYLOAD" | "RATE_LIMITED" };
+export type GameJoinResult =
+  | { ok: true; state: BalloonGameState }
+  | { ok: false; code: "NOT_IN_ROOM" | "NOT_IN_WORLD" | "TOO_FAR" | "ALREADY_IN_GAME" | "UNAVAILABLE" | "INVALID_PAYLOAD" | "RATE_LIMITED" };
+export type GameLeaveResult =
+  | { ok: true }
+  | { ok: false; code: "NOT_IN_ROOM" | "NOT_IN_GAME" | "INVALID_PAYLOAD" | "RATE_LIMITED" };
+export type GameHitResult =
+  | { ok: true; targetId: string; points: number; score: number }
+  | {
+    ok: false;
+    code:
+      | "NOT_IN_ROOM"
+      | "NOT_IN_GAME"
+      | "ROUND_ENDED"
+      | "UNKNOWN_TARGET"
+      | "DUPLICATE_HIT"
+      | "TOO_EARLY"
+      | "TOO_LATE"
+      | "HIT_RATE_LIMITED"
+      | "INVALID_PAYLOAD"
+      | "RATE_LIMITED";
+  };
 
 export interface ClientToServerEvents {
   "transport:ping": (request: PingRequest, acknowledge: (result: PingResult) => void) => void;
@@ -126,10 +177,14 @@ export interface ClientToServerEvents {
   "world:leave": (request: z.input<typeof worldLeaveSchema>, acknowledge: (result: WorldLeaveResult) => void) => void;
   "player:input": (request: z.input<typeof playerInputSchema>, acknowledge: (result: PlayerInputResult) => void) => void;
   "attraction:interact": (request: z.input<typeof attractionInteractSchema>, acknowledge: (result: AttractionInteractResult) => void) => void;
+  "game:join": (request: z.input<typeof gameJoinSchema>, acknowledge: (result: GameJoinResult) => void) => void;
+  "game:hit": (request: z.input<typeof gameHitSchema>, acknowledge: (result: GameHitResult) => void) => void;
+  "game:leave": (request: z.input<typeof gameLeaveSchema>, acknowledge: (result: GameLeaveResult) => void) => void;
 }
 
 export interface ServerToClientEvents {
   "room:snapshot": (snapshot: RoomSnapshot) => void;
   "world:snapshot": (snapshot: WorldSnapshot) => void;
   "economy:updated": (snapshot: EconomySnapshot) => void;
+  "game:state": (state: BalloonGameState) => void;
 }

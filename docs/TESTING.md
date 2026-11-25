@@ -219,3 +219,12 @@ The movement browser check uses Chromium with ANGLE SwiftShader. It records rend
 | `docker compose config -q && docker compose up --build -d --wait --wait-timeout 90` | Exit 0. Clean Linux production build (`sha256:28146edc2c4bf7db148468fba72af1fdab38791a4da1e53c1efa9d47c38ada95`). `mela-quest-app-1` healthy on `127.0.0.1:3000`; `/api/health` returned `{"status":"ok","service":"mela-io"}`. |
 | Isolated `npm.cmd run test:integration` | Exit 0. Four files, 9 tests passed in 9.52 seconds, including `tests/integration/economy.test.ts` (`economy:updated` on join and `room:resume`, and 404 on `/api/mint`). |
 | Isolated `npx.cmd playwright test --output test-results/cp11` | Exit 0. All 8 E2E tests passed in 1.3 minutes. Note: an intermediate run surfaced a prediction/server race in the CP-10 proximity prompt; deriving `nearby` from the server's authoritative pose in `app/world/carnival-preview.tsx` resolved it cleanly. |
+
+## 14. CP-12 balloon game engine (2026-11-25)
+
+| Check | Observed result |
+| --- | --- |
+| `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run build` | All exited 0 (host build succeeded on retry after transient sandbox `EPERM`). Seven unit files, 30 tests passed, including `tests/unit/balloon-game.test.ts` (deterministic schedule, round lifecycle, early/late/duplicate/unknown hit rejection, hit rate limit, one-time reward settlement, disconnect cleanup, and concurrent room isolation). |
+| `docker compose config -q && docker compose up --build -d --wait --wait-timeout 90` | Exit 0. Clean Linux production build (`sha256:e9f74a87033e7ccd07795df029ec9b4a970b0a3293aab108494cfb2fe3d367f9`). `mela-quest-app-1` healthy on `127.0.0.1:3000`; `/api/health` returned `{"status":"ok","service":"mela-io"}`. |
+| Isolated `npm.cmd run test:integration` | Exit 0. Five files, 10 tests passed in 9.85 seconds, including `tests/integration/balloon-game.test.ts` (distant join rejection, walking to Balloon Stall, `game:join`, valid hit, duplicate/unknown hit rejection, and `game:leave`). |
+| Isolated `npx.cmd playwright test --output test-results/cp12` | Exit 0. All 8 E2E tests passed in 1.6 minutes with 0 console/page errors. |

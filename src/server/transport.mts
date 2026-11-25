@@ -2,6 +2,7 @@ import type { Server as HttpServer } from "node:http";
 import { performance } from "node:perf_hooks";
 import { Server } from "socket.io";
 import type { ZodType } from "zod";
+import { BALLOON_HIT_RATE_LIMIT } from "../shared/balloon.ts";
 import { INPUT_RATE, SNAPSHOT_INTERVAL_MS } from "../shared/movement.ts";
 import {
   MAX_SOCKET_MESSAGE_BYTES,
@@ -9,6 +10,9 @@ import {
   SOCKET_PATH,
   attractionInteractSchema,
   createRoomSchema,
+  gameHitSchema,
+  gameJoinSchema,
+  gameLeaveSchema,
   joinRoomSchema,
   leaveRoomSchema,
   pingSchema,
@@ -21,6 +25,7 @@ import {
   type RequestError,
   type ServerToClientEvents,
 } from "../shared/protocol.ts";
+import { BalloonGameManager } from "./balloon-game.mts";
 import { EconomyManager } from "./economy.mts";
 import { RoomManager } from "./room-manager.mts";
 import { WorldSimulation } from "./world.mts";
@@ -98,6 +103,13 @@ export function attachTransport(httpServer: HttpServer) {
       io.sockets.sockets.get(connectionId)?.emit("economy:updated", snapshot);
     },
   });
+  const balloon = new BalloonGameManager({
+    now,
+    creditReward: (request) => economy.credit(request),
+    publish(state, connectionId) {
+      io.sockets.sockets.get(connectionId)?.emit("game:state", state);
+    },
+  });
   const rooms = new RoomManager({
     now,
     reconnectGraceMs,
@@ -105,6 +117,7 @@ export function attachTransport(httpServer: HttpServer) {
     onSession(notice, change) {
       world.sync(notice, change);
       economy.sync(notice, change);
+      balloon.sync(notice, change);
     },
     publish(snapshot, connections) {
       for (const connection of connections) {
@@ -114,11 +127,14 @@ export function attachTransport(httpServer: HttpServer) {
   });
   const sweep = setInterval(() => rooms.sweep(), 1000);
   const movement = setInterval(() => world.tick(), SNAPSHOT_INTERVAL_MS);
+  const games = setInterval(() => balloon.tick(), 250);
   sweep.unref();
   movement.unref();
+  games.unref();
   httpServer.once("close", () => {
     clearInterval(sweep);
     clearInterval(movement);
+    clearInterval(games);
   });
 
   io.on("connection", (socket) => {
@@ -156,6 +172,21 @@ export function attachTransport(httpServer: HttpServer) {
       if (!session) return { ok: false as const, code: "NOT_IN_ROOM" as const };
       return world.interact(session.playerId, attraction);
     });
+    const joinGame = requestHandler(gameJoinSchema, withinRoomBudget, () => {
+      const session = rooms.sessionView(socket.id);
+      if (!session) return { ok: false as const, code: "NOT_IN_ROOM" as const };
+      return balloon.join(session, world.pose(session.playerId));
+    });
+    const hitGame = requestHandler(gameHitSchema, requestBudget(BALLOON_HIT_RATE_LIMIT), ({ roundId, targetId }) => {
+      const session = rooms.sessionView(socket.id);
+      if (!session) return { ok: false as const, code: "NOT_IN_ROOM" as const };
+      return balloon.hit(session.playerId, roundId, targetId);
+    });
+    const leaveGame = requestHandler(gameLeaveSchema, withinRoomBudget, () => {
+      const session = rooms.sessionView(socket.id);
+      if (!session) return { ok: false as const, code: "NOT_IN_ROOM" as const };
+      return balloon.leave(session.playerId);
+    });
 
     socket.on("transport:ping", handlePing);
     socket.on("room:create", create);
@@ -166,6 +197,9 @@ export function attachTransport(httpServer: HttpServer) {
     socket.on("world:leave", leaveWorld);
     socket.on("player:input", move);
     socket.on("attraction:interact", interact);
+    socket.on("game:join", joinGame);
+    socket.on("game:hit", hitGame);
+    socket.on("game:leave", leaveGame);
     socket.once("disconnect", () => {
       socket.off("transport:ping", handlePing);
       socket.off("room:create", create);
@@ -176,6 +210,9 @@ export function attachTransport(httpServer: HttpServer) {
       socket.off("world:leave", leaveWorld);
       socket.off("player:input", move);
       socket.off("attraction:interact", interact);
+      socket.off("game:join", joinGame);
+      socket.off("game:hit", hitGame);
+      socket.off("game:leave", leaveGame);
       rooms.disconnect(socket.id);
     });
   });

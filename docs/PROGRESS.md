@@ -16,7 +16,7 @@
 | CP-09 | Carnival art pass | VERIFIED |
 | CP-10 | Interaction framework and HUD | VERIFIED |
 | CP-11 | Economy and inventory | VERIFIED |
-| CP-12 | Balloon game engine | NOT_STARTED |
+| CP-12 | Balloon game engine | VERIFIED |
 | CP-13 | Balloon game UI | NOT_STARTED |
 | CP-14 | Ferris wheel | NOT_STARTED |
 | CP-15 | Shopkeeper without AI | NOT_STARTED |
@@ -291,4 +291,28 @@ The user approved Painted Wood (option A) and requested a woman and a cat alongs
 - **Known issues and blockers:** None. The healthy Docker app remains running on `http://127.0.0.1:3000`.
 - **Decisions (ADR IDs):** None new.
 - **Next action:** CP-12 — Balloon game engine, after approval.
+- **Approval to advance:** pending
+
+## CP-12 — Balloon game engine
+
+- **Status:** VERIFIED
+- **Goal / requirement IDs:** `REQ-BALLOON-01`, `REQ-BALLOON-02`, `REQ-BALLOON-03`. Server round lifecycle, deterministic target schedule, hit validation, rate limits, one-time coin reward, disconnect cleanup, and concurrent room isolation.
+- **Starting commit / baseline:** Clean `HEAD` with CP-11 verified.
+- **Changes and files:**
+  - `src/shared/balloon.ts` & `src/shared/protocol.ts`: Added `BALLOON_ROUND_MS`, `generateBalloonTargets()`, `balloonRewardCoins()`, `gameJoinSchema`, `gameHitSchema`, `gameLeaveSchema`, `BalloonGameState`, and `"game:state"`.
+  - `src/server/balloon-game.mts`, `src/server/world.mts`, `src/server/transport.mts`: Added `BalloonGameManager` (`join`, `hit`, `leave`, `sync`, `tick`), `WorldSimulation.pose()`, 250 ms round settlement tick, and `"game:join"` / `"game:hit"` / `"game:leave"` socket handlers wired to `EconomyManager.credit()`.
+  - `tests/unit/balloon-game.test.ts` & `tests/integration/balloon-game.test.ts`: Added unit and socket integration tests.
+  - Updated `docs/SPECS.md`, `docs/TESTING.md`, and `docs/PROGRESS.md`.
+- **Commands actually executed:**
+  - Host: `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run build`.
+  - Docker: `docker compose config -q && docker compose up --build -d --wait --wait-timeout 90 && docker compose ps && curl.exe -fsS http://localhost:3000/api/health`.
+  - Isolated Docker suites: `npm.cmd run test:integration` and `npx.cmd playwright test --output test-results/cp12`.
+- **Results (exit codes, counts, observed behavior):**
+  - All final commands exited `0`.
+  - Unit: 7 files, 30 tests passed. Integration: 5 files, 10 tests passed (9.85 s). E2E: 8 tests passed (1.6 m).
+- **Evidence paths or CI run IDs:** `test-results/cp12/`; Docker manifest digest `sha256:e9f74a87033e7ccd07795df029ec9b4a970b0a3293aab108494cfb2fe3d367f9`.
+- **Manual checks:** NOT RUN (CP-12 is server engine only; playable Balloon Game UI is CP-13).
+- **Known issues and blockers:** None. The healthy Docker app remains running on `http://127.0.0.1:3000`.
+- **Decisions (ADR IDs):** `ADR-003`.
+- **Next action:** CP-13 — Balloon game UI, after approval.
 - **Approval to advance:** pending
