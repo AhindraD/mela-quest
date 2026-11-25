@@ -2,5 +2,8 @@ services:
   app:
     build: .
     init: true
+    environment:
+      MELA_RECONNECT_GRACE_MS: ${MELA_RECONNECT_GRACE_MS:-30000}
+      MELA_EMPTY_ROOM_TTL_MS: ${MELA_EMPTY_ROOM_TTL_MS:-60000}
     ports:
       - "127.0.0.1:3000:3000"

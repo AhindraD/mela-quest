@@ -8,7 +8,7 @@
 | CP-01 | Reproducible Next.js skeleton | VERIFIED |
 | CP-02 | Docker runtime | VERIFIED |
 | CP-03 | Socket transport and protocol | VERIFIED |
-| CP-04 | Authoritative room manager | NOT_STARTED |
+| CP-04 | Authoritative room manager | VERIFIED |
 | CP-05 | Lobby and invitation flow | NOT_STARTED |
 | CP-06 | 3D scene foundation | NOT_STARTED |
 | CP-07 | Local avatar and controls | NOT_STARTED |
@@ -124,4 +124,19 @@
 - **Known issues and blockers:** Docker Engine commands require access outside the sandbox. Room identity, authorization and resume state are CP-04 work. The local service remains running.
 - **Decisions:** `ADR-001`, `ADR-007`.
 - **Next action:** CP-04 — Authoritative room manager.
+- **Approval to advance:** approved (2026-11-25)
+
+## CP-04 — Authoritative room manager
+
+- **Status:** VERIFIED
+- **Goal / requirement IDs:** `REQ-ROOM-01` through `REQ-ROOM-05`. Implement typed room events, private session credentials, room-scoped snapshots, and deterministic expiry.
+- **Starting commit / baseline:** Clean CP-03 commit `f8f2569`.
+- **Changes and files:** Added `src/server/room-manager.mts`, typed and validated room events, clock-injected unit tests, real Socket.IO integration tests, and Compose lifetime settings.
+- **Commands actually executed:** `npm ci`, lint, typecheck, unit/integration tests, production build, Compose config/start/status/logs, HTTP readiness, runtime UID, and stop/start.
+- **Results:** Seven unit tests and five integration tests passed. The isolated Docker run verified five-player admission, sixth rejection, duplicate and invalid join handling, token privacy, cross-room isolation, explicit leave, identity restoration and capacity release after expiry.
+- **Evidence:** [TESTING.md](TESTING.md). Docker image manifest digest `sha256:20d7b1269684358241e09fc34e0fc282da57ec6bff757ac1ae4783e32c12d92e`.
+- **Manual checks:** NOT RUN. The checkpoint adds a socket API and makes no visual changes.
+- **Known issues and blockers:** Browser lobby and invitation links are CP-05 work. Rooms are process-local. The local container remains running.
+- **Decisions:** `ADR-008`.
+- **Next action:** CP-05 — Lobby and invitation flow.
 - **Approval to advance:** pending

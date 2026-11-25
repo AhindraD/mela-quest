@@ -100,3 +100,15 @@ Append-only record of material architecture and product decisions.
 - **Consequences:** Custom server imports must resolve directly in Node. Next.js continues to build browser code separately. Revisit if the server needs compile-time transforms or path aliases.
 - **Validation:** Host typecheck and production image runtime checks are part of CP-03.
 - **Supersedes:** The CLI entry point portion of ADR-006.
+
+## ADR-008 — Reserve room capacity for disconnected sessions
+
+- **Date:** 2026-11-25
+- **Status:** Accepted
+- **Context:** A room must enforce five-player capacity while allowing a guest to survive a transient disconnect.
+- **Options:** Release the slot immediately, allow a reconnect to displace the new occupant, or reserve the slot for a grace period.
+- **Decision:** Reserve the slot for 30 seconds by default. Require its private session token to resume once the prior socket has disconnected. Explicit leave invalidates the token immediately. Keep empty invites joinable for 60 seconds by default.
+- **Rationale:** A reconnecting guest keeps their identity and place without evicting anyone. Join and resume use monotonic deadlines, including when the scheduled sweep has yet to run.
+- **Consequences:** Guests joining a full room may need to wait for a reserved slot. All state is process-local. Rosters expose connection status and stable IDs.
+- **Validation:** Clock-injected boundary tests and independent Socket.IO clients in the CP-04 Docker gate.
+- **Supersedes:** None.

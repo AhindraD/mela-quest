@@ -68,9 +68,24 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
 - **Local runtime:** Docker Compose runs the custom server as a non-root user on Node.js 24.11.1 LTS. Compose publishes `127.0.0.1:3000` and the image checks `/api/health`.
 - **Transport:** One HTTP listener hosts Next.js and Socket.IO 4.8.4 on `/socket.io`. Both polling and WebSocket are supported. A browser handshake with an explicit Origin must match the incoming HTTP Host. Clients without an Origin, such as CLI probes, are accepted. Public HTTPS and proxy handling are future deployment work.
 - **Implemented protocol v1:** Client event `transport:ping` takes one object with `version: 1` and `echo` (a string of up to 128 UTF-16 code units). The caller must supply an acknowledgment callback. Replies are `{ ok: true, version: 1, echo, serverTime }` or `{ ok: false, code }`. `serverTime` is the server's Unix time in milliseconds. Malformed payloads and unsupported versions return `INVALID_PAYLOAD`; the eleventh acknowledged request in a one-second per-connection window returns `RATE_LIMITED`. Requests without callbacks are ignored. Transport messages larger than 4096 bytes are rejected by Engine.IO. The diagnostic has no room authorization, sequence counters or session state. Each reconnect creates a new transport identity and rate window.
+- **Room protocol v1 (CP-04):** Each request carries `version: 1` and requires an acknowledgment. Extra keys are rejected. Room commands share an independent per-socket budget of 10 acknowledged requests per second and the same 4096-byte message limit as ping. Commands without an acknowledgment have no effect. They are processed in arrival order on each connection, with no automatic retries or client sequence numbers.
+
+| Request | Additional fields | Outcome |
+| --- | --- | --- |
+| `room:create` | `nickname` | Creates a new room and admits its creator into one of five slots. |
+| `room:join` | `inviteCode`, `nickname` | Admits a guest if the invite is valid and space is available. Returns `INVALID_INVITE` or `ROOM_FULL` otherwise. |
+| `room:resume` | `sessionToken` | Restores the existing room and player identity before the reservation deadline. Returns `INVALID_SESSION` for unknown or expired tokens and `SESSION_ACTIVE` while the original connection is still active. |
+| `room:leave` | None | Removes the current connection's session immediately and returns `{ ok: true }`. A detached connection receives `NOT_IN_ROOM`. |
+
+Create, join and resume all reject a connection already in a room with `ALREADY_IN_ROOM`. Each successful admission privately acknowledges `{ ok: true, playerId, inviteCode, sessionToken, snapshot }`. The invite uses 128 random bits and a session token uses 256 random bits, encoded in unpadded Base64URL. Player IDs and room IDs are UUIDs. Nicknames are trimmed and normalized to NFC, then checked for a length of 1–24 UTF-16 code units and for disallowed control and markup characters. Duplicate nicknames are allowed.
+
+`room:snapshot` is sent only to currently connected members after a membership or connection change and can precede that operation's acknowledgment. It carries `version`, `roomId` and roster entries with `playerId`, `nickname` and `connected`. Invitation and session tokens are absent from these events. Socket.IO preserves snapshot order per connection. The creator has the same room permissions as each guest.
+
+A disconnected session reserves its slot for `MELA_RECONNECT_GRACE_MS` (default 30 seconds). The session expires at the deadline. Once its last session is removed, the empty room still accepts joins for `MELA_EMPTY_ROOM_TTL_MS` (default 60 seconds), then its invite expires. The server uses a monotonic clock, a one-second background sweep, and deadline checks on admission. A process restart clears all rooms and reservations.
+
 - **Proposed gameplay events (runtime schemas and authorization arrive with each feature):**
-  - Client -> Server: `room:create`, `room:join`, `room:resume`, `room:leave`, `player:input`, `attraction:interact`, `game:join`, `game:hit`, `shop:purchase`, `ride:board`, `ride:exit`, `fireworks:contribute`.
-  - Server -> Client: `room:snapshot`, `player:joined`, `player:left`, `world:snapshot`, `game:state`, `economy:updated`, `ride:state`, `fireworks:started`, `flags:updated`, `session:error`.
+  - Client -> Server: `player:input`, `attraction:interact`, `game:join`, `game:hit`, `shop:purchase`, `ride:board`, `ride:exit`, `fireworks:contribute`.
+  - Server -> Client: `world:snapshot`, `game:state`, `economy:updated`, `ride:state`, `fireworks:started`, `flags:updated`, `session:error`.
 - **Validation & Security:** All untrusted Socket.IO and HTTP payloads validated with Zod. Finite numeric checks on all coordinates/inputs. Server timestamps and sequence numbers on movement/events. Idempotency keys on all economy mutations.
 
 ## 6. Open Questions & Unresolved Requirements

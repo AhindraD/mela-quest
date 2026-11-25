@@ -106,3 +106,17 @@ try {
     Remove-Item Env:MELA_TEST_URL -ErrorAction SilentlyContinue
 }
 ```
+
+## 6. CP-04 Authoritative room manager (2026-11-25)
+
+| Check | Observed result |
+| --- | --- |
+| `npm.cmd ci` | Exit 0. Installed 499 packages, audited 506, and reported zero vulnerabilities. The existing ESLint deprecation warning still appears. |
+| `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run test:unit`, `npm.cmd run build` | All exited 0. Two unit files, seven tests passed. Clock-injected room tests covered the exact grace boundary, invalidated tokens, restored identity, and checked empty-invite expiry both before and at its deadline. |
+| `docker compose config`, `docker compose up --build -d --wait --wait-timeout 90` | Exit 0. Compose resolved the 30000 ms reconnect grace and 60000 ms empty-room TTL. The Linux production build succeeded and the local app became healthy. |
+| `npm.cmd run test:integration` | Exit 0. Two files, five tests passed in 3.24 seconds against a disposable Compose instance at `127.0.0.1:63723` with a 2500 ms grace period. Six independent clients exercised capacity, duplicate join, disconnect/resume and expiry. A separate room received only its own roster. Invalid invite, invalid nickname and explicit leave checks passed. Roster broadcasts contained no invitation or session tokens. |
+| `docker compose ps`, `curl.exe -fsS http://localhost:3000/api/health`, `docker compose exec -T app id`, `docker compose logs --tail=100 app` | Exit 0. App was healthy on loopback, ran as UID/GID 1000 and returned readiness JSON with no fatal startup errors. |
+| `docker compose stop app`, `docker inspect`, `docker compose start --wait --wait-timeout 60 app` | Exit 0. Observed `exited 0 false`, then a healthy restart and successful readiness probe. |
+| `npm run test:e2e` | Not applicable until CP-05. No UI changed. |
+
+For the faster isolated integration run, set `$env:MELA_TEST_ROOM_GRACE_MS = "2500"` before using the PowerShell recipe above. Add `-e MELA_RECONNECT_GRACE_MS=$env:MELA_TEST_ROOM_GRACE_MS` to its `docker compose run` command and remove `Env:MELA_TEST_ROOM_GRACE_MS` afterward. With the default grace period the expiry test takes about 30 seconds.

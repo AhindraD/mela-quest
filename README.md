@@ -2,7 +2,7 @@
 
 A cozy, browser-based 3D Indian festive carnival ("mela") for private groups of up to five players to explore, play mini-games, ride attractions, chat with a multilingual shopkeeper, and celebrate together.
 
-The current build includes a Next.js landing page, a readiness endpoint at `/api/health`, and a same-origin Socket.IO transport at `/socket.io`. Checkpoint results are in the [progress ledger](docs/PROGRESS.md).
+The current build includes a Next.js landing page, a readiness endpoint at `/api/health`, and a Socket.IO room backend for groups of up to five. Room creation, joining, and reconnect are available through the socket protocol. The browser lobby is planned for CP-05. [Progress ledger](docs/PROGRESS.md)
 
 ## Planned Features (Roadmap)
 - Private invite-only rooms (max 5 players including host) with server-authoritative state
@@ -53,7 +53,7 @@ Planned for later checkpoints:
 
 ## Known Limitations
 - The current landing page is a preview. Gameplay and controls arrive in later checkpoints.
-- The planned in-memory room state will be cleared by server restarts.
+- Room state is held in memory. Server restarts invalidate existing invites and guest sessions.
 
 ## Documentation
 - [Specifications](docs/SPECS.md)
