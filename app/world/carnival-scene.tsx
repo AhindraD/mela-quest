@@ -33,7 +33,9 @@ function supportsWebGL() {
   }
 }
 
-export default function CarnivalScene({ surface, kind, color, initial, authoritative, remotes, onInput, onPositionChange }: {
+export default function CarnivalScene({
+  surface, kind, color, initial, authoritative, remotes, onInput, fireworksActive, reducedMotion,
+}: {
   surface: RefObject<HTMLElement | null>;
   kind: AvatarKind;
   color: AvatarColor;
@@ -41,7 +43,8 @@ export default function CarnivalScene({ surface, kind, color, initial, authorita
   authoritative: (GroundPoint & { yaw: number }) | null;
   remotes: PlayerPose[];
   onInput: (input: GroundPoint) => void;
-  onPositionChange?: (point: GroundPoint) => void;
+  fireworksActive?: boolean;
+  reducedMotion?: boolean;
 }) {
   const [supported] = useState(supportsWebGL);
   const [ready, setReady] = useState(false);
@@ -70,8 +73,22 @@ export default function CarnivalScene({ surface, kind, color, initial, authorita
             <meshBasicMaterial map={fair.signMap} />
           </mesh>
           <LocalPlayer surface={surface} kind={kind} color={color} initial={initial}
-            authoritative={authoritative} onInput={onInput} onPositionChange={onPositionChange} />
+            authoritative={authoritative} onInput={onInput} />
           <RemotePlayers players={remotes} />
+          {fireworksActive && !reducedMotion && (
+            <group name="fireworks-bursts">
+              {[
+                [-5, 10, -4, "#ffb94f"],
+                [4, 11.5, -5, "#e86f86"],
+                [0, 12.2, -2, "#69daba"],
+              ].map(([x, y, z, tint], idx) => (
+                <mesh key={idx} position={[x as number, y as number, z as number]}>
+                  <icosahedronGeometry args={[0.9, 0]} />
+                  <meshBasicMaterial color={tint as string} />
+                </mesh>
+              ))}
+            </group>
+          )}
         </Canvas>
       </div>
     </>

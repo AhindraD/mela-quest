@@ -113,6 +113,11 @@ export class RoomManager {
     return session ? this.notice(session) : null;
   }
 
+  activeSessionByToken(sessionToken: string): SessionNotice | null {
+    const session = this.sessions.get(sessionToken);
+    return session && session.connectionId !== null ? this.notice(session) : null;
+  }
+
   private admit(room: Room, connectionId: string, nickname: string, color: AvatarColor): RoomAdmission {
     let token: string;
     do {

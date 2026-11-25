@@ -410,3 +410,130 @@ body {
 .balloon-scoreboard li strong {
   margin-left: auto;
 }
+
+.world-hud-controls {
+  display: flex;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.world-hud-button {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #ffdcaa3b;
+  background: #20172fe8;
+  color: #f8ecd9;
+  font-size: .78rem;
+  cursor: pointer;
+}
+
+.world-fireworks-banner {
+  position: absolute;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #ffb94f;
+  background: #2a1a3ef2;
+  color: #ffe99a;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.ferris-seats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.ferris-seat {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ffdcaa44;
+  background: #1b1329;
+  color: #f8ecd9;
+  cursor: pointer;
+}
+
+.ferris-seat-mine {
+  border-color: #ffb94f;
+  background: #3a264d;
+}
+
+.ferris-seat-taken {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.shop-dialog {
+  width: min(600px, 100%);
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.shop-catalog {
+  display: grid;
+  gap: 8px;
+}
+
+.shop-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #1b1329;
+  border: 1px solid #ffdcaa26;
+}
+
+.shop-item-desc {
+  font-size: .82rem;
+  color: #c7b5a5;
+}
+
+.shop-chat-box {
+  display: grid;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #ffdcaa26;
+}
+
+.shop-chat-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.shop-chat-log {
+  max-height: 130px;
+  overflow-y: auto;
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 8px;
+  background: #161022;
+  font-size: .88rem;
+}
+
+.shop-mode-tag {
+  font-size: .75rem;
+  color: #ffb94f;
+}
+
+.shop-chat-form {
+  display: flex;
+  gap: 8px;
+}
+
+.shop-chat-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ffdcaa3b;
+  background: #161022;
+  color: #fff0d9;
+}

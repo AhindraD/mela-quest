@@ -2,24 +2,35 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
+import type { CatalogItemId } from "../shared/catalog.ts";
 import {
   PROTOCOL_VERSION as version,
   SOCKET_PATH,
   createRoomSchema,
   inviteCodeSchema,
   resumeRoomSchema,
-  type AvatarColor,
   type AttractionInteractResult,
+  type AvatarColor,
   type BalloonGameState,
   type ClientToServerEvents,
   type EconomySnapshot,
+  type FeatureFlags,
+  type FireworksContributeResult,
+  type FireworksState,
   type GameHitResult,
   type GameJoinResult,
+  type RideBoardResult,
+  type RideExitResult,
+  type RideState,
   type RoomAdmission,
   type RoomAdmissionResult,
   type RoomLeaveResult,
   type RoomSnapshot,
   type ServerToClientEvents,
+  type ShopChatResult,
+  type ShopPurchaseResult,
+  type ShopVoiceResult,
+  type SupportedLanguage,
   type WorldEnterResult,
   type WorldLeaveResult,
   type WorldSnapshot,
@@ -83,6 +94,15 @@ export function useLobby(initialInvite: string | null) {
   const [inventory, setInventory] = useState<Record<string, number>>({});
   const [balloonGame, setBalloonGame] = useState<BalloonGameState | null>(null);
   const [balloonGameAt, setBalloonGameAt] = useState(0);
+  const [rideState, setRideState] = useState<RideState | null>(null);
+  const [flags, setFlags] = useState<FeatureFlags>({
+    balloon_game: true,
+    ferris_wheel: true,
+    ai_shopkeeper: true,
+    fireworks: true,
+    double_rewards: false,
+  });
+  const [fireworksState, setFireworksState] = useState<FireworksState | null>(null);
   const roomId = useRef<string | null>(null);
   const [connection, setConnection] = useState<"connecting" | "offline" | "ready" | "retry">("connecting");
   const [busy, setBusy] = useState<"create" | "join" | "leave" | null>(null);
@@ -177,6 +197,20 @@ export function useLobby(initialInvite: string | null) {
       setBalloonGameAt(performance.now());
     }
 
+    function onRide(state: RideState) {
+      if (roomId.current !== state.roomId) return;
+      setRideState(state);
+    }
+
+    function onFlags(next: FeatureFlags) {
+      setFlags(next);
+    }
+
+    function onFireworks(state: FireworksState) {
+      if (roomId.current !== state.roomId) return;
+      setFireworksState(state);
+    }
+
     socket.on("connect", onConnect);
     socket.on("connect_error", onConnectError);
     socket.on("disconnect", onDisconnect);
@@ -184,6 +218,9 @@ export function useLobby(initialInvite: string | null) {
     socket.on("world:snapshot", onWorld);
     socket.on("economy:updated", onEconomy);
     socket.on("game:state", onBalloonGame);
+    socket.on("ride:state", onRide);
+    socket.on("flags:updated", onFlags);
+    socket.on("fireworks:started", onFireworks);
     socket.connect();
 
     return () => {
@@ -195,6 +232,9 @@ export function useLobby(initialInvite: string | null) {
       socket.off("world:snapshot", onWorld);
       socket.off("economy:updated", onEconomy);
       socket.off("game:state", onBalloonGame);
+      socket.off("ride:state", onRide);
+      socket.off("flags:updated", onFlags);
+      socket.off("fireworks:started", onFireworks);
       socket.disconnect();
       socketRef.current = null;
     };
@@ -335,6 +375,83 @@ export function useLobby(initialInvite: string | null) {
     await socket.timeout(3000).emitWithAck("game:leave", { version }).catch(() => undefined);
   }, []);
 
+  const boardRide = useCallback(async (seatIndex?: number): Promise<RideBoardResult> => {
+    const socket = socketRef.current;
+    if (!socket?.connected) return { ok: false, code: "NOT_IN_ROOM" };
+    try {
+      const result = await socket.timeout(4000).emitWithAck("ride:board", seatIndex === undefined ? { version } : { version, seatIndex });
+      if (result.ok) setRideState(result.state);
+      return result;
+    } catch {
+      return { ok: false, code: "UNAVAILABLE" };
+    }
+  }, []);
+
+  const exitRide = useCallback(async (): Promise<RideExitResult> => {
+    const socket = socketRef.current;
+    if (!socket?.connected) return { ok: false, code: "NOT_IN_ROOM" };
+    try {
+      const result = await socket.timeout(4000).emitWithAck("ride:exit", { version });
+      if (result.ok) setRideState(result.state);
+      return result;
+    } catch {
+      return { ok: false, code: "NOT_RIDING" };
+    }
+  }, []);
+
+  const purchaseShopItem = useCallback(async (itemId: CatalogItemId, quantity = 1): Promise<ShopPurchaseResult> => {
+    const socket = socketRef.current;
+    if (!socket?.connected) return { ok: false, code: "NOT_IN_ROOM" };
+    try {
+      const transactionId = `shop:${Date.now()}:${Math.random().toString(36).slice(2, 10)}`;
+      return await socket.timeout(4000).emitWithAck("shop:purchase", { version, itemId, quantity, transactionId });
+    } catch {
+      return { ok: false, code: "UNAVAILABLE" };
+    }
+  }, []);
+
+  const chatWithShopkeeper = useCallback(async (message: string, language: SupportedLanguage): Promise<ShopChatResult> => {
+    const socket = socketRef.current;
+    if (!socket?.connected) return { ok: false, code: "NOT_IN_ROOM" };
+    try {
+      return await socket.timeout(20_000).emitWithAck("shop:chat", { version, message, language });
+    } catch {
+      return { ok: false, code: "UNAVAILABLE" };
+    }
+  }, []);
+
+  const voiceWithShopkeeper = useCallback(async (
+    audioBase64: string,
+    mimeType: string,
+    language: SupportedLanguage,
+  ): Promise<ShopVoiceResult> => {
+    const sessionToken = credentials.current?.sessionToken;
+    if (!sessionToken) return { ok: false, code: "NOT_IN_ROOM" };
+    try {
+      const response = await fetch("/api/shop/voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ version, sessionToken, audioBase64, mimeType, language }),
+      });
+      return (await response.json()) as ShopVoiceResult;
+    } catch {
+      return { ok: false, code: "UNAVAILABLE" };
+    }
+  }, []);
+
+  const contributeFireworks = useCallback(async (amount: number): Promise<FireworksContributeResult> => {
+    const socket = socketRef.current;
+    if (!socket?.connected) return { ok: false, code: "NOT_IN_ROOM" };
+    try {
+      const transactionId = `fw:${Date.now()}:${Math.random().toString(36).slice(2, 10)}`;
+      const result = await socket.timeout(4000).emitWithAck("fireworks:contribute", { version, amount, transactionId });
+      if (result.ok) setFireworksState(result.state);
+      return result;
+    } catch {
+      return { ok: false, code: "UNAVAILABLE" };
+    }
+  }, []);
+
   function retry() {
     setError("");
     setConnection("connecting");
@@ -342,8 +459,9 @@ export function useLobby(initialInvite: string | null) {
   }
 
   return {
-    invite, room, world, coins, inventory, balloonGame, balloonGameAt, connection, busy, error,
-    enter, leave, retry, enterWorld, leaveWorld, sendInput, interactAttraction,
-    joinBalloonGame, hitBalloonTarget, leaveBalloonGame,
+    invite, room, world, coins, inventory, balloonGame, balloonGameAt, rideState, flags, fireworksState,
+    connection, busy, error, enter, leave, retry, enterWorld, leaveWorld, sendInput, interactAttraction,
+    joinBalloonGame, hitBalloonTarget, leaveBalloonGame, boardRide, exitRide,
+    purchaseShopItem, chatWithShopkeeper, voiceWithShopkeeper, contributeFireworks,
   };
 }

@@ -18,16 +18,16 @@
 | CP-11 | Economy and inventory | VERIFIED |
 | CP-12 | Balloon game engine | VERIFIED |
 | CP-13 | Balloon game UI | VERIFIED |
-| CP-14 | Ferris wheel | NOT_STARTED |
-| CP-15 | Shopkeeper without AI | NOT_STARTED |
-| CP-16 | Sarvam adapter and text dialogue | NOT_STARTED |
-| CP-17 | Multilingual voice | NOT_STARTED |
-| CP-18 | Flagsmith integration | NOT_STARTED |
-| CP-19 | Shared fireworks and celebration | NOT_STARTED |
-| CP-20 | Audio, accessibility and polish | NOT_STARTED |
+| CP-14 | Ferris wheel | IN_PROGRESS |
+| CP-15 | Shopkeeper without AI | IN_PROGRESS |
+| CP-16 | Sarvam adapter and text dialogue | IN_PROGRESS |
+| CP-17 | Multilingual voice | IN_PROGRESS |
+| CP-18 | Flagsmith integration | IN_PROGRESS |
+| CP-19 | Shared fireworks and celebration | IN_PROGRESS |
+| CP-20 | Audio, accessibility and polish | IN_PROGRESS |
 | CP-21 | Resilience and security | NOT_STARTED |
-| CP-22 | Observability foundation | NOT_STARTED |
-| CP-23 | NudgeBee integration verification | NOT_STARTED |
+| CP-22 | Observability foundation | IN_PROGRESS |
+| CP-23 | NudgeBee integration verification | IN_PROGRESS |
 | CP-24 | Full five-player acceptance and performance | NOT_STARTED |
 | CP-25 | Documentation and release candidate | NOT_STARTED |
 | CP-26..30 | AWS deployment (gated, not authorized) | NOT_STARTED |
@@ -340,3 +340,14 @@ The user approved Painted Wood (option A) and requested a woman and a cat alongs
 - **Decisions (ADR IDs):** `ADR-003`.
 - **Next action:** CP-14 — Ferris wheel, after approval.
 - **Approval to advance:** pending
+
+## Demo & Sponsor Branch Handoff (`sponsor-demo`)
+
+- **Status:** IN_PROGRESS (demo-ready build & media recorded; formal per-checkpoint test gates for CP-14..23 deferred per user request)
+- **Changes and files:**
+  - `src/server/ferris-wheel.mts`, `src/server/fireworks.mts`, `src/integrations/sarvam.mts`, `src/integrations/flagsmith.mts`, `src/shared/metrics.ts`, `app/api/metrics/route.ts`, `app/attractions/*`, `server.mts`, `compose.yaml`.
+  - Updated `sarvam.mts` to verified live endpoints/models (`sarvam-105b-conversations`, `bulbul:v3`, `saaras:v3`) and routed microphone voice uploads through `POST /api/shop/voice` so `Engine.IO` remains at `4096` bytes while supporting up to `750 KB` voice clips.
+  - Recorded [`docs/media/mela-demo.mp4`](media/mela-demo.mp4) (`51.4s`) and six screenshots in `docs/media/`, and rewrote `README.md` for non-technical readers.
+- **Observed checks:**
+  - Live Sarvam AI Hindi chat (`[live]`) and `bulbul:v3` TTS verified against `https://api.sarvam.ai` from inside the Docker app container (`3.78s` end-to-end Socket.IO ack, `291080`-char base64 audio payload).
+  - Full 3-player Playwright session recorded and muxed with Sarvam AI voiceover into `docs/media/mela-demo.mp4`.

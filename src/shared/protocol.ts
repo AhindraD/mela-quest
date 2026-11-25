@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { MAX_INPUT_SEQUENCE } from "./movement.ts";
 import type { BalloonTarget } from "./balloon.ts";
+import { CATALOG_IDS, type CatalogItemId } from "./catalog.ts";
 import { ATTRACTION_IDS, AVATAR_KINDS, type AttractionId } from "./world.ts";
 
 export const PROTOCOL_VERSION = 1;
@@ -60,6 +61,42 @@ export const gameHitSchema = z.strictObject({
   ...roomRequest,
   roundId: z.string().min(1).max(64),
   targetId: z.string().min(1).max(160),
+});
+export const rideBoardSchema = z.strictObject({
+  ...roomRequest,
+  seatIndex: z.number().int().gte(0).lte(7).optional(),
+});
+export const rideExitSchema = z.strictObject(roomRequest);
+export const shopPurchaseSchema = z.strictObject({
+  ...roomRequest,
+  itemId: z.enum(CATALOG_IDS),
+  quantity: z.number().int().gte(1).lte(20).default(1),
+  transactionId: z.string().min(1).max(128),
+});
+export const SUPPORTED_LANGUAGES = ["en-IN", "hi-IN", "ta-IN", "bn-IN", "te-IN", "mr-IN"] as const;
+export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
+export const shopChatSchema = z.strictObject({
+  ...roomRequest,
+  message: z.string().trim().min(1).max(300),
+  language: z.enum(SUPPORTED_LANGUAGES).default("en-IN"),
+});
+export const shopVoiceSchema = z.strictObject({
+  ...roomRequest,
+  audioBase64: z.string().min(1).max(700_000),
+  mimeType: z.string().min(1).max(64),
+  language: z.enum(SUPPORTED_LANGUAGES).default("en-IN"),
+});
+export const shopVoiceHttpSchema = z.strictObject({
+  ...roomRequest,
+  sessionToken: z.string().length(43).regex(/^[A-Za-z0-9_-]+$/),
+  audioBase64: z.string().min(1).max(700_000),
+  mimeType: z.string().min(1).max(64),
+  language: z.enum(SUPPORTED_LANGUAGES).default("en-IN"),
+});
+export const fireworksContributeSchema = z.strictObject({
+  ...roomRequest,
+  amount: z.number().int().gte(1).lte(50),
+  transactionId: z.string().min(1).max(128),
 });
 
 export interface RoomSnapshot {
@@ -133,6 +170,33 @@ export interface BalloonGameState {
   scoreboard: BalloonScoreEntry[];
 }
 
+export interface RideState {
+  version: typeof PROTOCOL_VERSION;
+  roomId: string;
+  epochMs: number;
+  periodMs: number;
+  serverTime: number;
+  seats: (string | null)[];
+}
+
+export interface FeatureFlags {
+  balloon_game: boolean;
+  ferris_wheel: boolean;
+  ai_shopkeeper: boolean;
+  fireworks: boolean;
+  double_rewards: boolean;
+}
+
+export interface FireworksState {
+  version: typeof PROTOCOL_VERSION;
+  roomId: string;
+  pool: number;
+  threshold: number;
+  activeUntil: number | null;
+  cooldownUntil: number | null;
+  serverTime: number;
+}
+
 export type WorldEnterResult = { ok: true; pose: PlayerPose } | RoomError | RequestError;
 export type WorldLeaveResult =
   | { ok: true }
@@ -166,6 +230,24 @@ export type GameHitResult =
       | "INVALID_PAYLOAD"
       | "RATE_LIMITED";
   };
+export type RideBoardResult =
+  | { ok: true; seatIndex: number; state: RideState }
+  | { ok: false; code: "NOT_IN_ROOM" | "NOT_IN_WORLD" | "TOO_FAR" | "ALREADY_RIDING" | "SEAT_OCCUPIED" | "WHEEL_FULL" | "UNAVAILABLE" | "INVALID_PAYLOAD" | "RATE_LIMITED" };
+export type RideExitResult =
+  | { ok: true; state: RideState }
+  | { ok: false; code: "NOT_IN_ROOM" | "NOT_RIDING" | "INVALID_PAYLOAD" | "RATE_LIMITED" };
+export type ShopPurchaseResult =
+  | { ok: true; itemId: CatalogItemId; coins: number; inventory: Record<string, number> }
+  | { ok: false; code: "NOT_IN_ROOM" | "NOT_IN_WORLD" | "TOO_FAR" | "UNAVAILABLE" | "INVALID_ITEM" | "INVALID_AMOUNT" | "INVALID_TRANSACTION_ID" | "ROOM_MISMATCH" | "INSUFFICIENT_FUNDS" | "INVALID_PAYLOAD" | "RATE_LIMITED" };
+export type ShopChatResult =
+  | { ok: true; reply: string; audioBase64?: string; mode: "live" | "mock" }
+  | { ok: false; code: "NOT_IN_ROOM" | "NOT_IN_WORLD" | "TOO_FAR" | "UNAVAILABLE" | "INVALID_PAYLOAD" | "RATE_LIMITED" };
+export type ShopVoiceResult =
+  | { ok: true; transcript: string; reply: string; audioBase64?: string; mode: "live" | "mock" }
+  | { ok: false; code: "NOT_IN_ROOM" | "NOT_IN_WORLD" | "TOO_FAR" | "UNAVAILABLE" | "INVALID_PAYLOAD" | "RATE_LIMITED" };
+export type FireworksContributeResult =
+  | { ok: true; state: FireworksState; started: boolean }
+  | { ok: false; code: "NOT_IN_ROOM" | "NOT_IN_WORLD" | "TOO_FAR" | "UNAVAILABLE" | "COOLDOWN" | "INSUFFICIENT_FUNDS" | "INVALID_AMOUNT" | "INVALID_TRANSACTION_ID" | "ROOM_MISMATCH" | "INVALID_PAYLOAD" | "RATE_LIMITED" };
 
 export interface ClientToServerEvents {
   "transport:ping": (request: PingRequest, acknowledge: (result: PingResult) => void) => void;
@@ -180,6 +262,12 @@ export interface ClientToServerEvents {
   "game:join": (request: z.input<typeof gameJoinSchema>, acknowledge: (result: GameJoinResult) => void) => void;
   "game:hit": (request: z.input<typeof gameHitSchema>, acknowledge: (result: GameHitResult) => void) => void;
   "game:leave": (request: z.input<typeof gameLeaveSchema>, acknowledge: (result: GameLeaveResult) => void) => void;
+  "ride:board": (request: z.input<typeof rideBoardSchema>, acknowledge: (result: RideBoardResult) => void) => void;
+  "ride:exit": (request: z.input<typeof rideExitSchema>, acknowledge: (result: RideExitResult) => void) => void;
+  "shop:purchase": (request: z.input<typeof shopPurchaseSchema>, acknowledge: (result: ShopPurchaseResult) => void) => void;
+  "shop:chat": (request: z.input<typeof shopChatSchema>, acknowledge: (result: ShopChatResult) => void) => void;
+  "shop:voice": (request: z.input<typeof shopVoiceSchema>, acknowledge: (result: ShopVoiceResult) => void) => void;
+  "fireworks:contribute": (request: z.input<typeof fireworksContributeSchema>, acknowledge: (result: FireworksContributeResult) => void) => void;
 }
 
 export interface ServerToClientEvents {
@@ -187,4 +275,7 @@ export interface ServerToClientEvents {
   "world:snapshot": (snapshot: WorldSnapshot) => void;
   "economy:updated": (snapshot: EconomySnapshot) => void;
   "game:state": (state: BalloonGameState) => void;
+  "ride:state": (state: RideState) => void;
+  "flags:updated": (flags: FeatureFlags) => void;
+  "fireworks:started": (state: FireworksState) => void;
 }

@@ -19,6 +19,7 @@ async function start() {
   await app.prepare();
   const handleRequest = app.getRequestHandler();
   server.on("request", (request, response) => {
+    if (request.method === "POST" && request.url === "/api/shop/voice") return;
     void handleRequest(request, response).catch((error: unknown) => {
       console.error("HTTP request failed", error);
       if (response.headersSent) {
