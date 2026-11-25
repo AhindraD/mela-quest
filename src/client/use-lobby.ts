@@ -10,8 +10,11 @@ import {
   resumeRoomSchema,
   type AvatarColor,
   type AttractionInteractResult,
+  type BalloonGameState,
   type ClientToServerEvents,
   type EconomySnapshot,
+  type GameHitResult,
+  type GameJoinResult,
   type RoomAdmission,
   type RoomAdmissionResult,
   type RoomLeaveResult,
@@ -78,6 +81,8 @@ export function useLobby(initialInvite: string | null) {
   const [world, setWorld] = useState<WorldSnapshot | null>(null);
   const [coins, setCoins] = useState(0);
   const [inventory, setInventory] = useState<Record<string, number>>({});
+  const [balloonGame, setBalloonGame] = useState<BalloonGameState | null>(null);
+  const [balloonGameAt, setBalloonGameAt] = useState(0);
   const roomId = useRef<string | null>(null);
   const [connection, setConnection] = useState<"connecting" | "offline" | "ready" | "retry">("connecting");
   const [busy, setBusy] = useState<"create" | "join" | "leave" | null>(null);
@@ -166,12 +171,19 @@ export function useLobby(initialInvite: string | null) {
       setInventory(snapshot.inventory);
     }
 
+    function onBalloonGame(state: BalloonGameState) {
+      if (roomId.current !== state.roomId) return;
+      setBalloonGame(state);
+      setBalloonGameAt(performance.now());
+    }
+
     socket.on("connect", onConnect);
     socket.on("connect_error", onConnectError);
     socket.on("disconnect", onDisconnect);
     socket.on("room:snapshot", onSnapshot);
     socket.on("world:snapshot", onWorld);
     socket.on("economy:updated", onEconomy);
+    socket.on("game:state", onBalloonGame);
     socket.connect();
 
     return () => {
@@ -182,6 +194,7 @@ export function useLobby(initialInvite: string | null) {
       socket.off("room:snapshot", onSnapshot);
       socket.off("world:snapshot", onWorld);
       socket.off("economy:updated", onEconomy);
+      socket.off("game:state", onBalloonGame);
       socket.disconnect();
       socketRef.current = null;
     };
@@ -290,11 +303,47 @@ export function useLobby(initialInvite: string | null) {
     }
   }, []);
 
+  const joinBalloonGame = useCallback(async (): Promise<GameJoinResult> => {
+    const socket = socketRef.current;
+    if (!socket?.connected) return { ok: false, code: "NOT_IN_ROOM" };
+    try {
+      const result = await socket.timeout(5000).emitWithAck("game:join", { version });
+      if (result.ok) {
+        setBalloonGame(result.state);
+        setBalloonGameAt(performance.now());
+      }
+      return result;
+    } catch {
+      return { ok: false, code: "UNAVAILABLE" };
+    }
+  }, []);
+
+  const hitBalloonTarget = useCallback(async (roundId: string, targetId: string): Promise<GameHitResult> => {
+    const socket = socketRef.current;
+    if (!socket?.connected) return { ok: false, code: "NOT_IN_ROOM" };
+    try {
+      return await socket.timeout(3000).emitWithAck("game:hit", { version, roundId, targetId });
+    } catch {
+      return { ok: false, code: "RATE_LIMITED" };
+    }
+  }, []);
+
+  const leaveBalloonGame = useCallback(async () => {
+    setBalloonGame(null);
+    const socket = socketRef.current;
+    if (!socket?.connected) return;
+    await socket.timeout(3000).emitWithAck("game:leave", { version }).catch(() => undefined);
+  }, []);
+
   function retry() {
     setError("");
     setConnection("connecting");
     socketRef.current?.disconnect().connect();
   }
 
-  return { invite, room, world, coins, inventory, connection, busy, error, enter, leave, retry, enterWorld, leaveWorld, sendInput, interactAttraction };
+  return {
+    invite, room, world, coins, inventory, balloonGame, balloonGameAt, connection, busy, error,
+    enter, leave, retry, enterWorld, leaveWorld, sendInput, interactAttraction,
+    joinBalloonGame, hitBalloonTarget, leaveBalloonGame,
+  };
 }

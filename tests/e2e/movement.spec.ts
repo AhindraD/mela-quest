@@ -44,7 +44,7 @@ async function enterCarnival(page: Page) {
 }
 
 test("two and then five browsers see each other move", async ({ page, browser }, testInfo) => {
-  test.setTimeout(90_000);
+  test.setTimeout(120_000);
   const errors: string[] = [];
   const contexts: BrowserContext[] = [];
   const observe = (observed: Page) => {

@@ -6,11 +6,15 @@ import type { GroundPoint } from "../../src/shared/movement";
 import type {
   AttractionInteractResult,
   AvatarColor,
+  BalloonGameState,
+  GameHitResult,
+  GameJoinResult,
   PlayerPose,
   RoomSnapshot,
   WorldSnapshot,
 } from "../../src/shared/protocol.ts";
 import { nearestAttraction, type AttractionId, type AvatarKind } from "../../src/shared/world";
+import { BalloonGameModal } from "../attractions/balloon-game-modal";
 import { PreviewFallback } from "./preview-fallback";
 
 const CarnivalScene = dynamic(() => import("./carnival-scene"), {
@@ -31,18 +35,24 @@ class PreviewBoundary extends Component<{ children: ReactNode }, { failed: boole
 }
 
 export function CarnivalPreview({
-  kind, color, playerId, roster, coins, world, enterWorld, leaveWorld, sendInput, interactAttraction, onClose,
+  kind, color, playerId, roster, coins, balloonGame, balloonGameAt, world, enterWorld, leaveWorld,
+  sendInput, interactAttraction, joinBalloonGame, hitBalloonTarget, leaveBalloonGame, onClose,
 }: {
   kind: AvatarKind;
   color: AvatarColor;
   playerId: string;
   roster: RoomSnapshot["players"];
   coins: number;
+  balloonGame: BalloonGameState | null;
+  balloonGameAt: number;
   world: WorldSnapshot | null;
   enterWorld: (avatar: AvatarKind) => Promise<PlayerPose | null>;
   leaveWorld: () => Promise<void>;
   sendInput: (sequence: number, x: number, z: number) => void;
   interactAttraction: (attraction: AttractionId) => Promise<AttractionInteractResult>;
+  joinBalloonGame: () => Promise<GameJoinResult>;
+  hitBalloonTarget: (roundId: string, targetId: string) => Promise<GameHitResult>;
+  leaveBalloonGame: () => Promise<void>;
   onClose: () => void;
 }) {
   const surface = useRef<HTMLElement>(null);
@@ -101,9 +111,12 @@ export function CarnivalPreview({
   }, [interactAttraction]);
 
   const closeOverlay = useCallback(() => {
+    if (activeOverlay?.attraction === "balloonStall") {
+      void leaveBalloonGame();
+    }
     setActiveOverlay(null);
     heading.current?.focus({ preventScroll: true });
-  }, []);
+  }, [activeOverlay?.attraction, leaveBalloonGame]);
 
   function onInput(input: GroundPoint) {
     sequence.current += 1;
@@ -163,15 +176,26 @@ export function CarnivalPreview({
       )}
       {activeOverlay && (
         <div className="world-dialog-backdrop">
-          <div className="world-dialog" role="dialog" aria-modal="true" aria-labelledby="attraction-dialog-title">
-            <h2 id="attraction-dialog-title">{activeOverlay.label}</h2>
-            <p>{activeOverlay.summary}</p>
-            <div className="world-dialog-actions">
-              <button ref={closeDialogButton} type="button" className="lobby-secondary" onClick={closeOverlay}>
-                Close
-              </button>
+          {activeOverlay.attraction === "balloonStall" ? (
+            <BalloonGameModal
+              playerId={playerId}
+              gameState={balloonGame}
+              receivedAt={balloonGameAt}
+              onJoin={joinBalloonGame}
+              onHit={hitBalloonTarget}
+              onClose={closeOverlay}
+            />
+          ) : (
+            <div className="world-dialog" role="dialog" aria-modal="true" aria-labelledby="attraction-dialog-title">
+              <h2 id="attraction-dialog-title">{activeOverlay.label}</h2>
+              <p>{activeOverlay.summary}</p>
+              <div className="world-dialog-actions">
+                <button ref={closeDialogButton} type="button" className="lobby-secondary" onClick={closeOverlay}>
+                  Close
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </section>

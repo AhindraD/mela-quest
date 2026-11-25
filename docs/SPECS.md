@@ -111,6 +111,11 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
 - **Validation & rate limits:** `game:join` checks Balloon Stall proximity (`TOO_FAR`); `game:hit` validates `roundId`, `targetId` ownership, spawn/despawn timing (`TOO_EARLY`, `TOO_LATE`), duplicate hits (`DUPLICATE_HIT`), and bounded hit rate (`BALLOON_MIN_HIT_INTERVAL_MS = 80`, socket budget `BALLOON_HIT_RATE_LIMIT = 15`/s).
 - **One-time reward & cleanup:** When `now >= endsAt`, `BalloonGameManager.tick()` settles the round and credits `balloonRewardCoins(score)` once per participant via idempotent key `balloon:<roundId>:<playerId>`. Disconnects (`unbound` / `removed`) and `game:leave` clean up participants and empty rounds. Concurrent rooms remain isolated.
 
+#### CP-13 balloon game UI
+
+- **Balloon Stall modal (`app/attractions/balloon-game-modal.tsx`):** Replaces the generic placeholder overlay when interacting with `balloonStall`. Displays rules, `Start round` / `Play again`, server-anchored countdown timer, clickable per-player balloon targets, hit feedback, live shared scoreboard, and end-of-round coin earnings.
+- **Input isolation & cleanup:** Keeps `WASD`/Arrow movement suppressed while the dialog is open. Closing via `Leave game`, `Close`, or `Escape` emits `game:leave` and returns focus to `#world-title`. `MELA_BALLOON_ROUND_MS` configures round duration (default `30000` ms).
+
 ### Session flow
 - **Lobby & Join:** Guests choose a nickname and one of four avatar colors. Creating or joining a room opens its roster and exposes a link of the form `/?invite=<inviteCode>`. The link field can be selected manually if automatic copying fails. Guests may explicitly leave to release their slots.
 - **Interactions:** Proximity prompts appear when near an attraction; pressing `E` sends an interaction request validated by server distance and Flagsmith availability checks.

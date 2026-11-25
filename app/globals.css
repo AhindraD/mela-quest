@@ -336,3 +336,77 @@ body {
   gap: 10px;
   margin-top: 4px;
 }
+
+.balloon-dialog {
+  width: min(560px, 100%);
+}
+
+.balloon-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.balloon-timer {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #ffb94f;
+  color: #ffe99a;
+  font-weight: 700;
+}
+
+.balloon-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.balloon-feedback {
+  color: #ffdcaa;
+  font-weight: 600;
+}
+
+.balloon-stage {
+  position: relative;
+  height: 230px;
+  border-radius: 12px;
+  border: 1px solid #ffdcaa38;
+  background: radial-gradient(circle at 50% 80%, #3a2752 0%, #1d152d 80%);
+  overflow: hidden;
+}
+
+.balloon-target {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 52px;
+  border-radius: 50% 50% 45% 45%;
+  border: 2px solid #fff0d9aa;
+  color: #1c132a;
+  font: 700 .8rem/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.balloon-target-marigold { background: #ffb94f; }
+.balloon-target-rose { background: #e86f86; }
+.balloon-target-mint { background: #69daba; }
+.balloon-target-indigo { background: #8f77db; color: #fff; }
+
+.balloon-scoreboard ul {
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.balloon-scoreboard li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.balloon-scoreboard li strong {
+  margin-left: auto;
+}

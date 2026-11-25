@@ -228,3 +228,13 @@ The movement browser check uses Chromium with ANGLE SwiftShader. It records rend
 | `docker compose config -q && docker compose up --build -d --wait --wait-timeout 90` | Exit 0. Clean Linux production build (`sha256:e9f74a87033e7ccd07795df029ec9b4a970b0a3293aab108494cfb2fe3d367f9`). `mela-quest-app-1` healthy on `127.0.0.1:3000`; `/api/health` returned `{"status":"ok","service":"mela-io"}`. |
 | Isolated `npm.cmd run test:integration` | Exit 0. Five files, 10 tests passed in 9.85 seconds, including `tests/integration/balloon-game.test.ts` (distant join rejection, walking to Balloon Stall, `game:join`, valid hit, duplicate/unknown hit rejection, and `game:leave`). |
 | Isolated `npx.cmd playwright test --output test-results/cp12` | Exit 0. All 8 E2E tests passed in 1.6 minutes with 0 console/page errors. |
+
+## 15. CP-13 balloon game UI (2026-11-25)
+
+| Check | Observed result |
+| --- | --- |
+| `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run build` | All exited 0 (after replacing synchronous `setState` in `useEffect` with callback-anchored `balloonGameAt` and retrying `npm run build` past transient sandbox `EPERM`). Seven unit files, 30 tests passed. |
+| `docker compose config -q && docker compose up --build -d --wait --wait-timeout 90` | Exit 0. Clean Linux production build (`sha256:32f04dc41a4c8ac5cdbf9bf46c713dd7ba9bb089ce25627c41965d3971853b5d`). `mela-quest-app-1` healthy on `127.0.0.1:3000`; `/api/health` returned `{"status":"ok","service":"mela-io"}`. |
+| Isolated `npm.cmd run test:integration` | Exit 0. Five files, 10 tests passed in ~10 seconds. |
+| Isolated `npx.cmd playwright test --output test-results/cp13` (`MELA_BALLOON_ROUND_MS=8000`) | After increasing the 5-browser timeout in `tests/e2e/movement.spec.ts` to 120000 ms and targeting `.last()` in `tests/e2e/balloon.spec.ts`, all 9 E2E tests passed in 2.3 minutes with 0 console/page errors: two players walked to Balloon Stall, played a full round, synchronized scores, earned coins (`Coins: 5`), replayed, and exited mid-round cleanly. |
+| Screenshot inspection | Inspected `cp13-balloon-active.png` and `cp13-balloon-results.png` under `test-results/cp13/`. Confirmed countdown, balloon targets, `+20 pts!` feedback, synchronized scoreboard, results, and `Coins: 5` HUD update. |

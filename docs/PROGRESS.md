@@ -17,7 +17,7 @@
 | CP-10 | Interaction framework and HUD | VERIFIED |
 | CP-11 | Economy and inventory | VERIFIED |
 | CP-12 | Balloon game engine | VERIFIED |
-| CP-13 | Balloon game UI | NOT_STARTED |
+| CP-13 | Balloon game UI | VERIFIED |
 | CP-14 | Ferris wheel | NOT_STARTED |
 | CP-15 | Shopkeeper without AI | NOT_STARTED |
 | CP-16 | Sarvam adapter and text dialogue | NOT_STARTED |
@@ -315,4 +315,28 @@ The user approved Painted Wood (option A) and requested a woman and a cat alongs
 - **Known issues and blockers:** None. The healthy Docker app remains running on `http://127.0.0.1:3000`.
 - **Decisions (ADR IDs):** `ADR-003`.
 - **Next action:** CP-13 — Balloon game UI, after approval.
+- **Approval to advance:** pending
+
+## CP-13 — Balloon game UI
+
+- **Status:** VERIFIED
+- **Goal / requirement IDs:** `REQ-BALLOON-01`, `REQ-BALLOON-02`, `REQ-BALLOON-03`, `REQ-MOVE-02`. Playable balloon targets, countdown, hit feedback, results, shared scoreboard, replay, mid-round exit cleanup, and two-player browser verification.
+- **Starting commit / baseline:** Clean `HEAD` with CP-12 verified.
+- **Changes and files:**
+  - `src/server/transport.mts`: Added `MELA_BALLOON_ROUND_MS` configuration (default `30000` ms).
+  - `src/client/use-lobby.ts`, `app/lobby.tsx`, `app/world/carnival-preview.tsx`, `app/attractions/balloon-game-modal.tsx`, `app/globals.css`: Wired `"game:state"`, `joinBalloonGame`, `hitBalloonTarget`, `leaveBalloonGame`, and built `BalloonGameModal`.
+  - `tests/e2e/balloon.spec.ts` & `tests/e2e/movement.spec.ts`: Added two-player balloon round E2E test; raised 5-browser timeout to `120000` ms.
+  - Updated `docs/SPECS.md`, `docs/TESTING.md`, and `docs/PROGRESS.md`.
+- **Commands actually executed:**
+  - Host: `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run build` (plus final `npm run lint && npm run typecheck`).
+  - Docker: `docker compose config -q && docker compose up --build -d --wait --wait-timeout 90 && docker compose ps && curl.exe -fsS http://localhost:3000/api/health`.
+  - Isolated Docker suites: `npm.cmd run test:integration` and `npx.cmd playwright test --output test-results/cp13`.
+- **Results (exit codes, counts, observed behavior):**
+  - All final commands exited `0`.
+  - Unit: 7 files, 30 tests passed. Integration: 5 files, 10 tests passed. E2E: 9 tests passed (2.3 m) with 0 console/page errors.
+- **Evidence paths or CI run IDs:** `test-results/cp13/` (`cp13-balloon-active.png`, `cp13-balloon-results.png`); Docker manifest digest `sha256:32f04dc41a4c8ac5cdbf9bf46c713dd7ba9bb089ce25627c41965d3971853b5d`.
+- **Manual checks:** PASS — inspected `cp13-balloon-active.png` and `cp13-balloon-results.png` from the Docker-served Chromium session.
+- **Known issues and blockers:** None. The healthy Docker app remains running on `http://127.0.0.1:3000`.
+- **Decisions (ADR IDs):** `ADR-003`.
+- **Next action:** CP-14 — Ferris wheel, after approval.
 - **Approval to advance:** pending

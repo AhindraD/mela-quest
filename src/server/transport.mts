@@ -79,6 +79,7 @@ function roomDuration(name: string, fallback: number): number {
 export function attachTransport(httpServer: HttpServer) {
   const reconnectGraceMs = roomDuration("MELA_RECONNECT_GRACE_MS", 30_000);
   const emptyRoomTtlMs = roomDuration("MELA_EMPTY_ROOM_TTL_MS", 60_000);
+  const balloonRoundMs = roomDuration("MELA_BALLOON_ROUND_MS", 30_000);
   const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
     path: SOCKET_PATH,
     serveClient: false,
@@ -105,6 +106,7 @@ export function attachTransport(httpServer: HttpServer) {
   });
   const balloon = new BalloonGameManager({
     now,
+    roundDurationMs: balloonRoundMs,
     creditReward: (request) => economy.credit(request),
     publish(state, connectionId) {
       io.sockets.sockets.get(connectionId)?.emit("game:state", state);
