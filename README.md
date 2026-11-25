@@ -2,7 +2,7 @@
 
 A cozy, browser-based 3D Indian festive carnival ("mela") for private groups of up to five players to explore, play mini-games, ride attractions, chat with a multilingual shopkeeper, and celebrate together.
 
-> **Current Status:** `CP-01` (Reproducible Next.js Skeleton) is **VERIFIED**. Minimal Next.js App Router landing page, `/api/health` readiness endpoint, lint/typecheck/unit test scripts, and production build are working. Next is `CP-02` (Docker runtime) pending user approval.
+The current build includes a Next.js landing page, a readiness endpoint at `/api/health`, and a local Docker Compose setup. Checkpoint results are in the [progress ledger](docs/PROGRESS.md).
 
 ## Planned Features (Roadmap)
 - Private invite-only rooms (max 5 players including host) with server-authoritative state
@@ -23,25 +23,25 @@ A cozy, browser-based 3D Indian festive carnival ("mela") for private groups of 
 - Docker (`29.9.3` observed) & Docker Compose (`v5.7.0` observed; daemon must be running for CP-02+)
 - Desktop browser (Chrome or Edge observed)
 
-## Setup & Controls (Planned for CP-01 / CP-02+)
-Once `CP-01` and `CP-02` are implemented:
+## Local Setup
 ```sh
 cp .env.example .env
 docker compose up --build -d
 ```
-- **URL:** `http://localhost:3000`
-- **Controls (Desktop-first):** `WASD` / Arrow keys to move, `E` to interact, `Escape` to close overlays.
+- Open `http://127.0.0.1:3000` after `docker compose ps` reports the app healthy.
+- The environment file is optional for the current build.
 - **Shutdown:** `docker compose down`
 
 ## Test Commands
 Implemented in `CP-01`:
+- `npm ci`
 - `npm run lint` (`eslint .`)
 - `npm run typecheck` (`tsc --noEmit`)
 - `npm run test:unit` (`vitest run tests/unit`)
 - `npm run build` (`next build --webpack`)
 
 Planned for later checkpoints:
-- `npm run test:integration` (`CP-03`), `npm run test:e2e` (`CP-05`), Docker smoke checks (`CP-02`)
+- `npm run test:integration` (`CP-03`), `npm run test:e2e` (`CP-05`)
 
 ## Sponsor Integrations Status
 | Integration | Purpose | Status |
@@ -51,9 +51,8 @@ Planned for later checkpoints:
 | NudgeBee | Operational monitoring & incident investigation | `NOT_STARTED` (planned CP-23) |
 
 ## Known Limitations
-- Project is at `CP-00`; no playable build exists yet.
-- Single-process in-memory room state means server restarts clear active rooms and session balances.
-- Docker daemon was not reachable from the sandboxed terminal during CP-00 inspection (`permission denied` on `docker_engine` pipe); this must be resolved before CP-02.
+- The current landing page is a preview. Gameplay and controls arrive in later checkpoints.
+- The planned in-memory room state will be cleared by server restarts.
 
 ## Documentation
 - [Specifications](docs/SPECS.md)

@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | CP-00 | Discovery and project contract | VERIFIED |
 | CP-01 | Reproducible Next.js skeleton | VERIFIED |
-| CP-02 | Docker runtime | NOT_STARTED |
+| CP-02 | Docker runtime | VERIFIED |
 | CP-03 | Socket transport and protocol | NOT_STARTED |
 | CP-04 | Authoritative room manager | NOT_STARTED |
 | CP-05 | Lobby and invitation flow | NOT_STARTED |
@@ -92,5 +92,21 @@
   - Default Turbopack `next build` panicked on Windows PostCSS worker spawn (`ADR-005` switched build script to `next build --webpack`).
   - Docker commands in CP-02 will require unsandboxed execution (`BypassSandbox: true`) or user execution because the sandbox blocks `npipe:////./pipe/docker_engine`.
 - **Decisions (ADR IDs):** `ADR-001`, `ADR-003` (accepted), `ADR-005`.
-- **Next action:** Await user approval to proceed to CP-02 — Docker runtime.
+- **Verification follow-up (2026-11-25):** The original install generated the lockfile. `npm.cmd ci` initially failed with sandbox EPERM and passed on retry outside the sandbox (479 packages installed, 486 audited, 0 vulnerabilities). Lint, typecheck and both unit tests passed. The host build passed on retry outside the sandbox after a separate webpack EPERM.
+- **Next action:** Proceed to CP-02 — Docker runtime.
+- **Approval to advance:** approved (2026-11-25)
+
+## CP-02 — Docker runtime
+
+- **Status:** VERIFIED
+- **Goal / requirement IDs:** `REQ-OPS-01`. Build a clean production image, verify the non-root runtime, health, browser landing page, shutdown, restart, and image contents.
+- **Starting commit / baseline:** `46217b9`.
+- **Changes and files:** Added `Dockerfile`, `.dockerignore`, and `compose.yaml`. Updated the local setup, specifications, deployment contract and test records.
+- **Commands actually executed:** Host `npm ci`, lint, typecheck, unit tests and production build. Clean Docker build, Compose config and startup, health and log checks, runtime file/UID inspection, a competing port bind, and a stop/start cycle. See [TESTING.md](TESTING.md) for invocations.
+- **Results:** Clean Linux build and all host gates passed. Compose reported healthy at `127.0.0.1:3000` before and after restart. Node ran as UID 1000. The port conflict failed as expected. SIGTERM cleanup completed in 0.48 seconds.
+- **Evidence:** [TESTING.md](TESTING.md), CP-02 results and image digest. Landing page screenshot inspected in the checkpoint chat.
+- **Manual checks:** PASS. The in-app Chromium browser rendered the landing page and reported zero captured warnings or errors.
+- **Known issues and blockers:** Docker Engine commands require access outside the sandbox. Integration and browser E2E suites are introduced in CP-03 and CP-05. The local service remains running for review.
+- **Decisions:** `ADR-004`, `ADR-006`.
+- **Next action:** CP-03 — Socket transport and protocol.
 - **Approval to advance:** pending

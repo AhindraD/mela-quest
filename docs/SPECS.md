@@ -64,6 +64,7 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
 
 ## 5. Architecture & Protocol Baseline
 - **Stack:** Next.js App Router, TypeScript (`strict: true`), React Three Fiber, Three.js, Drei, Socket.IO (client & server), Zustand, Tailwind CSS, Zod, Node.js LTS.
+- **Local runtime (CP-02):** Docker Compose runs the production Next.js CLI as a non-root user on Node.js 24.11.1 LTS. Compose publishes `127.0.0.1:3000` and the image checks `/api/health`. The custom server begins in CP-03.
 - **Transport:** Single custom Node HTTP server hosting Next.js and Socket.IO on the same origin (`/socket.io`). No Next.js `standalone` output.
 - **Protocol Events (Proposed, to be specified with Zod schemas in CP-03/CP-04):**
   - Client -> Server: `room:create`, `room:join`, `room:resume`, `room:leave`, `player:input`, `attraction:interact`, `game:join`, `game:hit`, `shop:purchase`, `ride:board`, `ride:exit`, `fireworks:contribute`.
@@ -78,4 +79,4 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
    - Exact Sarvam AI API endpoints, supported language codes, model names, and credentials.
    - Flagsmith environment keys and SDK version.
    - NudgeBee onboarding prerequisites (specifically whether Docker-only monitoring is supported or if local kind/k3d Kubernetes is required).
-5. **Docker Daemon Access:** In the CP-00 environment check, `docker info` inside the agent sandbox returned `permission denied while trying to connect to the docker API at npipe:////./pipe/docker_engine`. Confirm Docker Desktop is running and how container commands should be executed for CP-02+ (unsandboxed approval or user-executed).
+5. **Docker Daemon Access (resolved in CP-02):** The sandbox cannot access the Docker API pipe. Docker Desktop Linux Engine access was verified outside the sandbox with command approval.

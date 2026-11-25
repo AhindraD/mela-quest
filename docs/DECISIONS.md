@@ -76,3 +76,15 @@ Append-only record of material architecture and product decisions.
 - **Consequences:** Uses Webpack instead of Turbopack for production builds; reversible if Turbopack Windows PostCSS IPC is fixed or when building in Linux Docker containers.
 - **Validation:** Verified via `npm run build` in CP-01.
 - **Supersedes:** None.
+
+## ADR-006 — Node.js 24 LTS and the Next.js CLI in CP-02
+
+- **Date:** 2026-11-25
+- **Status:** Accepted
+- **Context:** The existing Next.js skeleton needs a production container before Socket.IO is introduced. The lockfile's Vitest and Vite releases support Node.js 24.
+- **Options:** Pin a compatible LTS Node image and run the production Next.js CLI, or introduce the custom Node entry point during CP-02.
+- **Decision:** Use `node:24.11.1-bookworm-slim` for both stages, retain normal `.next` output and run the production CLI directly under Compose init.
+- **Rationale:** A direct Node process receives signals from Compose init. Keeping the Next.js CLI for this checkpoint keeps the custom server and transport in CP-03.
+- **Consequences:** CP-03 replaces the CLI command with its custom entry point. Revisit the base pin when dependency compatibility or Node.js maintenance warrants it.
+- **Validation:** Clean image build, healthy startup, browser render, SIGTERM stop, and healthy restart in CP-02.
+- **Supersedes:** None.

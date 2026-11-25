@@ -1,20 +1,22 @@
 # Mela.io — Deployment & Runtime Contract
 
 > [!IMPORTANT]
-> **Current Executed State:** Nothing has been built, containerized, or deployed yet (CP-00). AWS deployment is **explicitly NOT authorized** during local checkpoints (CP-00 through CP-25).
+> Local runtime verification is tracked in [TESTING.md](TESTING.md). AWS deployment requires separate approval after the local release.
 
-## 1. Local Container Contract (Target for CP-02+) — *Proposed*
+## 1. Local Container Contract
 
 - **Service:** `app` in `compose.yaml`
 - **Port Binding:** `127.0.0.1:3000:3000` by default (server listens on `0.0.0.0:3000` inside container). LAN testing requires explicit opt-in.
-- **Same-Origin Transport:** HTTP + Next.js App Router + Socket.IO on `/socket.io`.
-- **Image:** Multi-stage `Dockerfile` using pinned Node.js LTS base, `npm ci`, production `next build`, compiled/runtime custom server (`server.ts`), non-root user, `public/` and `.next/` artifacts, health check (`/api/health`), and graceful `SIGTERM` handling.
-- **Environment:** `.env.example` documents all variables with safe mock defaults; `.env` is gitignored and supplied at runtime only (never baked into build args or image layers).
-- **Commands (once CP-02 is implemented):**
+- **Server:** Next.js production CLI. CP-03 introduces the custom HTTP server and same-origin Socket.IO on `/socket.io`.
+- **Image:** Node.js 24.11.1 LTS on Debian Bookworm Slim. The build stage installs the lockfile and compiles Next.js. The runtime stage uses production dependencies, the Next.js build and public assets, and runs under the `node` user. Compose init forwards signals to the Node process. The image health check polls `/api/health`.
+- **Environment:** Compose starts with built-in defaults. `.env.example` documents host settings and reserved sponsor variables. The Docker build context excludes environment files, and CP-02 requires no credentials.
+- **Commands:**
   - Start: `docker compose up --build -d`
   - Status: `docker compose ps`
   - Logs: `docker compose logs --tail=100 app`
   - Stop: `docker compose down` (do not run `docker compose down -v` or global prune without approval)
+
+If Docker reports that port 3000 is already in use, identify the listener and free the port before retrying. On Windows, use `Get-NetTCPConnection -LocalPort 3000 -State Listen` to find its process ID. The local stack binds to loopback by default.
 
 ## 2. Deployment Prerequisites — *Proposed*
 - Local release candidate (`CP-00` through `CP-25`) verified in Docker.

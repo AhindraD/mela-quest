@@ -20,7 +20,7 @@ These commands will be established in CP-01/CP-02 and run at every applicable ch
 
 | Command | Introduced In | CP-01 Status |
 | --- | --- | --- |
-| `npm ci` | CP-01 | PASS (`npm install --save-exact` generated `package-lock.json`, 486 packages audited, 0 vulnerabilities) |
+| `npm ci` | CP-01 | PASS (follow-up clean lockfile install, 486 packages audited, 0 vulnerabilities) |
 | `npm run lint` | CP-01 | PASS (exit `0`, `eslint .`) |
 | `npm run typecheck` | CP-01 | PASS (exit `0`, `tsc --noEmit`) |
 | `npm run test:unit` | CP-01 | PASS (exit `0`, 1 file, 2 tests passed) |
@@ -50,5 +50,24 @@ These commands will be established in CP-01/CP-02 and run at every applicable ch
   - `GET /api/health` -> `200` `{"status":"ok","service":"mela-io","uptimeSeconds":0,"timestamp":"2026-11-25T07:37:17.933Z"}`
   - `GET /` -> `200` (`Welcome to the Festive Carnival` present)
 
+### CP-01 follow-up and CP-02 Docker runtime (2026-11-25)
+
+| Check | Observed result |
+| --- | --- |
+| `npm.cmd ci` | Initial sandbox attempt exited 1 with EPERM creating a directory in `node_modules`. Retry outside the sandbox exited 0, installed 479 packages, audited 486 and reported 0 vulnerabilities. npm warned that the pinned ESLint release is unsupported. |
+| `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run test:unit` | Exit 0 for each. One test file, two tests passed. |
+| `npm.cmd run build` | Initial sandbox attempt exited 1 with webpack EPERM creating a directory in `.next`. Retry outside the sandbox exited 0. Routes generated for `/`, `/_not-found` and `/api/health`. |
+| `docker version --format '{{.Server.Os}}/{{.Server.Arch}}'`, `docker compose config` | Engine accessible outside the sandbox, Linux/amd64. Config exited 0 and resolved a loopback-only port mapping and Compose init. |
+| `docker compose build --no-cache --pull app` | Exit 0. Linux lockfile build installed 395 packages, built all expected routes and installed 27 production packages separately. |
+| `docker compose up --build -d --wait --wait-timeout 90`, `docker compose ps` | Exit 0. Final runtime image included both Next.js configuration files and became healthy. Local image manifest digest `sha256:1ef372549d63597bf240b3444353585b0877eb4b663118f974b3a7f5a6759fc1`. |
+| `curl.exe -fsS http://localhost:3000/api/health` | Exit 0 before and after restart. JSON returned `status: "ok"` and `service: "mela-io"`. |
+| `docker compose exec -T app id` and runtime file inspection | UID/GID 1000. App directory matched the expected build, assets, configs, manifests and dependencies. A filename scan of `.next` and `public` found no environment, npm config or key files. |
+| In-app Chromium | Opened `http://127.0.0.1:3000/`, inspected the screenshot and read the console. The expected welcome heading rendered. Zero captured warnings or errors. |
+| `docker run --rm -p 127.0.0.1:3000:3000 mela-quest-app true` | Expected exit 125 with “port is already allocated”. |
+| `docker compose stop app`, `docker inspect`, `docker compose start --wait --wait-timeout 60 app` | First harness run wrongly expected container exit 0 and stopped after seeing 143. The installed Next.js CLI explicitly exits 143 after SIGTERM cleanup. Corrected rerun observed exit 143 in 0.48 seconds, no OOM, a fresh container start timestamp and healthy status. |
+| `docker compose logs --tail=100 app` | Exit 0 before and after restart. Startup logs showed readiness and no fatal errors. |
+| `npm run test:integration`, `npm run test:e2e` | Not applicable until CP-03 and CP-05. Socket handshake verification begins with CP-03. |
+
 ## 4. Manual Verification Instructions
-Manual browser and multi-client verification instructions will be added starting in CP-02 (landing page) and CP-05 (multiplayer invite flow).
+
+Run `docker compose up --build -d --wait`. Open `http://127.0.0.1:3000/` in a desktop browser and confirm the welcome heading is visible. Check the developer console, run `curl.exe -fsS http://localhost:3000/api/health` on Windows, and inspect `docker compose logs --tail=100 app`. To verify restart, run `docker compose stop app` followed by `docker compose start --wait app` and repeat the health probe.
