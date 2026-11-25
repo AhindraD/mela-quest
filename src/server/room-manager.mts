@@ -1,11 +1,13 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import {
+  DEFAULT_AVATAR_COLOR,
   PROTOCOL_VERSION,
   ROOM_CAPACITY,
+  type AvatarColor,
   type RoomAdmission,
   type RoomError,
   type RoomSnapshot,
-} from "../shared/protocol.mts";
+} from "../shared/protocol.ts";
 
 interface Room {
   id: string;
@@ -18,6 +20,7 @@ interface Session {
   token: string;
   playerId: string;
   nickname: string;
+  color: AvatarColor;
   room: Room;
   connectionId: string | null;
   reconnectUntil: number | null;
@@ -40,7 +43,7 @@ export class RoomManager {
     this.options = options;
   }
 
-  create(connectionId: string, nickname: string): RoomAdmission | RoomError {
+  create(connectionId: string, nickname: string, color = DEFAULT_AVATAR_COLOR): RoomAdmission | RoomError {
     if (this.connections.has(connectionId)) return { ok: false, code: "ALREADY_IN_ROOM" };
     let inviteCode: string;
     do {
@@ -49,17 +52,17 @@ export class RoomManager {
 
     const room = { id: randomUUID(), inviteCode, members: new Set<Session>(), emptyUntil: null };
     this.rooms.set(inviteCode, room);
-    return this.admit(room, connectionId, nickname);
+    return this.admit(room, connectionId, nickname, color);
   }
 
-  join(connectionId: string, inviteCode: string, nickname: string): RoomAdmission | RoomError {
+  join(connectionId: string, inviteCode: string, nickname: string, color = DEFAULT_AVATAR_COLOR): RoomAdmission | RoomError {
     if (this.connections.has(connectionId)) return { ok: false, code: "ALREADY_IN_ROOM" };
     const room = this.rooms.get(inviteCode);
     if (!room || !this.expireRoomState(room, this.options.now())) {
       return { ok: false, code: "INVALID_INVITE" };
     }
     if (room.members.size >= ROOM_CAPACITY) return { ok: false, code: "ROOM_FULL" };
-    return this.admit(room, connectionId, nickname);
+    return this.admit(room, connectionId, nickname, color);
   }
 
   resume(connectionId: string, sessionToken: string): RoomAdmission | RoomError {
@@ -102,13 +105,13 @@ export class RoomManager {
     }
   }
 
-  private admit(room: Room, connectionId: string, nickname: string): RoomAdmission {
+  private admit(room: Room, connectionId: string, nickname: string, color: AvatarColor): RoomAdmission {
     let token: string;
     do {
       token = randomBytes(32).toString("base64url");
     } while (this.sessions.has(token));
 
-    const session = { token, playerId: randomUUID(), nickname, room, connectionId, reconnectUntil: null };
+    const session = { token, playerId: randomUUID(), nickname, color, room, connectionId, reconnectUntil: null };
     room.emptyUntil = null;
     room.members.add(session);
     this.sessions.set(token, session);
@@ -151,8 +154,8 @@ export class RoomManager {
     return {
       version: PROTOCOL_VERSION,
       roomId: room.id,
-      players: Array.from(room.members, ({ playerId, nickname, connectionId }) => ({
-        playerId, nickname, connected: connectionId !== null,
+      players: Array.from(room.members, ({ playerId, nickname, color, connectionId }) => ({
+        playerId, nickname, color, connected: connectionId !== null,
       })),
     };
   }

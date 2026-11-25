@@ -7,7 +7,7 @@ import {
   type RoomAdmissionResult,
   type RoomSnapshot,
   type ServerToClientEvents,
-} from "../../src/shared/protocol.mts";
+} from "../../src/shared/protocol.ts";
 
 type Client = Socket<ServerToClientEvents, ClientToServerEvents>;
 const endpoint = new URL(process.env.MELA_TEST_URL ?? "http://127.0.0.1:3000");
@@ -78,7 +78,7 @@ test("five independent guests, duplicate join, resume and expiry over real socke
   const returning = await connect();
   const restored = admitted(await resume(returning, last.sessionToken));
   expect(restored.playerId).toBe(last.playerId);
-  expect(restored.snapshot.players).toContainEqual({ playerId: last.playerId, nickname: "Fifth", connected: true });
+  expect(restored.snapshot.players).toContainEqual({ playerId: last.playerId, nickname: "Fifth", color: "marigold", connected: true });
   await expect.poll(hostSeesConnection).toBe(true);
   returning.disconnect();
   await expect.poll(hostSeesConnection).toBe(false);
@@ -104,8 +104,8 @@ test("room snapshots stay isolated and contain only public roster data", async (
     version,
     roomId: first.snapshot.roomId,
     players: [
-      { playerId: first.playerId, nickname: "First", connected: true },
-      { playerId: guest.playerId, nickname: "Visitor", connected: true },
+      { playerId: first.playerId, nickname: "First", color: "marigold", connected: true },
+      { playerId: guest.playerId, nickname: "Visitor", color: "marigold", connected: true },
     ],
   });
 

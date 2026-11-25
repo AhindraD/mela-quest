@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { RoomManager } from "../../src/server/room-manager.mts";
-import type { RoomAdmission, RoomAdmissionResult } from "../../src/shared/protocol.mts";
+import type { RoomAdmission, RoomAdmissionResult } from "../../src/shared/protocol.ts";
 
 function setup() {
   let now = 0;
@@ -41,14 +41,14 @@ test("reserves capacity until the grace deadline and expires the old credentials
 test("resume restores the same guest and only the active connection can leave", () => {
   const { rooms, publish, advanceTo } = setup();
   const host = admitted(rooms.create("host", "Host"));
-  const guest = admitted(rooms.join("old", host.inviteCode, "Guest"));
+  const guest = admitted(rooms.join("old", host.inviteCode, "Guest", "mint"));
   expect(rooms.resume("new", guest.sessionToken)).toEqual({ ok: false, code: "SESSION_ACTIVE" });
   rooms.disconnect("old");
   expect(publish).toHaveBeenLastCalledWith({
     ...guest.snapshot,
     players: [
-      { playerId: host.playerId, nickname: "Host", connected: true },
-      { playerId: guest.playerId, nickname: "Guest", connected: false },
+      { playerId: host.playerId, nickname: "Host", color: "marigold", connected: true },
+      { playerId: guest.playerId, nickname: "Guest", color: "mint", connected: false },
     ],
   }, ["host"]);
 

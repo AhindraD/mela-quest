@@ -11,4 +11,8 @@ All visual and audio assets used in Mela.io must be recorded here with their pat
 
 | Path | Description | Author | Source | License | Attribution | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| *(none yet)* | — | — | — | — | — | CP-00 baseline |
+| `public/assets/lobby-mela.webp` | Decorative illustration of an Indian night fair, compressed to WebP | OpenAI ImageGen, directed for Mela.io | Built-in ImageGen, original generation for CP-05 | Project-generated artwork, no third-party source asset | No external artist credit | Used in the lobby poster |
+
+### Lobby illustration prompt
+
+> Original editorial game illustration for the left panel of a browser lobby about an Indian nighttime mela. Portrait 4:5 composition, a glowing amber Ferris wheel centered above a compact lantern-lit Indian fairground with striped tents and hanging marigold garlands. Deep indigo and plum evening sky, warm gold light and restrained rose accents; painterly stylized 3D concept art with tactile detail and inviting atmosphere. Keep the lower quarter dark with enough quiet negative space for separate HTML copy. No people in foreground, no text, no logos, no interface, no watermark.

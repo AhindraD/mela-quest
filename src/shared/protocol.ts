@@ -4,6 +4,9 @@ export const PROTOCOL_VERSION = 1;
 export const SOCKET_PATH = "/socket.io";
 export const MAX_SOCKET_MESSAGE_BYTES = 4096;
 export const ROOM_CAPACITY = 5;
+export const AVATAR_COLORS = ["marigold", "rose", "mint", "indigo"] as const;
+export type AvatarColor = (typeof AVATAR_COLORS)[number];
+export const DEFAULT_AVATAR_COLOR: AvatarColor = "marigold";
 
 export const pingSchema = z.strictObject({
   version: z.literal(PROTOCOL_VERSION),
@@ -20,11 +23,13 @@ const roomRequest = { version: z.literal(PROTOCOL_VERSION) };
 const nickname = z.string().max(96).trim().normalize().min(1).max(24)
   .regex(/^[^<>\p{Cc}\u202A-\u202E\u2066-\u2069]+$/u);
 
-export const createRoomSchema = z.strictObject({ ...roomRequest, nickname });
+const guestProfile = { nickname, color: z.enum(AVATAR_COLORS).default(DEFAULT_AVATAR_COLOR) };
+export const inviteCodeSchema = z.string().length(22).regex(/^[A-Za-z0-9_-]+$/);
+export const createRoomSchema = z.strictObject({ ...roomRequest, ...guestProfile });
 export const joinRoomSchema = z.strictObject({
   ...roomRequest,
-  nickname,
-  inviteCode: z.string().length(22).regex(/^[A-Za-z0-9_-]+$/),
+  ...guestProfile,
+  inviteCode: inviteCodeSchema,
 });
 export const resumeRoomSchema = z.strictObject({
   ...roomRequest,
@@ -35,7 +40,7 @@ export const leaveRoomSchema = z.strictObject(roomRequest);
 export interface RoomSnapshot {
   version: typeof PROTOCOL_VERSION;
   roomId: string;
-  players: { playerId: string; nickname: string; connected: boolean }[];
+  players: { playerId: string; nickname: string; color: AvatarColor; connected: boolean }[];
 }
 
 export type RoomError = {

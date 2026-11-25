@@ -11,6 +11,7 @@
 - **Image:** Node.js 24.11.1 LTS on Debian Bookworm Slim. The build stage installs the lockfile and compiles Next.js. The runtime stage uses production dependencies, the Next.js build and public assets, and runs under the `node` user. Compose init forwards signals to the Node process. The image health check polls `/api/health`.
 - **Environment:** The image sets `MELA_HOST=0.0.0.0` and `PORT=3000` for its internal listener. For host execution the server reads process environment variables and defaults to `127.0.0.1:3000`. The Docker build context excludes environment files. Sponsor credentials are reserved for later checkpoints.
 - **Room lifetimes:** Compose forwards `MELA_RECONNECT_GRACE_MS` (default `30000`) and `MELA_EMPTY_ROOM_TTL_MS` (default `60000`). Both accept integer milliseconds from 1 through 86400000. Restarting the process clears all rooms and invalidates its invites and sessions.
+- **Invitations:** The lobby generates an invite using the origin the browser opened. With the default loopback binding, use separate browser contexts on the same machine to test the link.
 - **Commands:**
   - Start: `docker compose up --build -d`
   - Status: `docker compose ps`

@@ -6,7 +6,7 @@ import {
   type ClientToServerEvents,
   type PingResult,
   type ServerToClientEvents,
-} from "../../src/shared/protocol.mts";
+} from "../../src/shared/protocol.ts";
 
 const baseUrl = new URL(process.env.MELA_TEST_URL ?? "http://127.0.0.1:3000");
 const clients: Socket<ServerToClientEvents, ClientToServerEvents>[] = [];

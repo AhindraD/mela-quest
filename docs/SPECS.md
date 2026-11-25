@@ -33,6 +33,7 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
 | `REQ-ROOM-03` | Rooms | Guest identity uses a server-issued random session token (never nickname or socket ID); tokens are never broadcast to other players. |
 | `REQ-ROOM-04` | Rooms | Reconnect within a configurable grace period restores session state while the server process lives; expired sessions release capacity and empty rooms expire. |
 | `REQ-ROOM-05` | Rooms | Nicknames are length-bounded, sanitized, and rendered as plain text (XSS-safe). |
+| `REQ-LOBBY-01` | Lobby | A guest can choose a nickname and avatar color, create or join a room, share its invite link, view the roster, and reload within the reconnect grace period. The browser reports connection, invalid invite and full room states and supports keyboard use. |
 | `REQ-NET-01` | Transport | One HTTP listener serves Next.js and accepts same-origin Socket.IO connections. Independently connected clients receive versioned acknowledgments and can reconnect. |
 | `REQ-WORLD-01` | World | Compact, bounded, low-poly night carnival with central plaza & fountain, spawn area, paths, balloon stall, mithai shop, Ferris wheel, decorative stalls, and music/dance area. |
 | `REQ-WORLD-02` | World | Warm lanterns, festive colors, readable signs, and unobstructed spawn. |
@@ -56,7 +57,7 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
 | `REQ-OPS-02` | Operations | Structured logging without secrets/tokens/raw voice; Prometheus-compatible metrics endpoint (not publicly exposed in deployment). |
 
 ## 4. Gameplay Rules (Baseline)
-- **Lobby & Join:** Guest enters a bounded nickname and selects an avatar color, then creates a room or opens an invite URL (`/room/[inviteCode]` or query parameter — to be finalized in CP-05).
+- **Lobby & Join:** Guests choose a nickname and one of four avatar colors. Creating or joining a room opens its roster and exposes a link of the form `/?invite=<inviteCode>`. The link field can be selected manually if automatic copying fails. Guests may explicitly leave to release their slots.
 - **Interactions:** Proximity prompts appear when near an attraction; pressing `E` sends an interaction request validated by server distance and Flagsmith availability checks.
 - **Balloon Game:** 30-second round. Players enter from the Balloon Stall. Server spawns targets on a schedule and validates hits. On round end, coins are credited once and the shared scoreboard is displayed.
 - **Ferris Wheel:** Players board an available gondola seat via server reservation, ride with synchronized rotation, and exit safely to a valid ground coordinate.
@@ -72,14 +73,16 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
 
 | Request | Additional fields | Outcome |
 | --- | --- | --- |
-| `room:create` | `nickname` | Creates a new room and admits its creator into one of five slots. |
-| `room:join` | `inviteCode`, `nickname` | Admits a guest if the invite is valid and space is available. Returns `INVALID_INVITE` or `ROOM_FULL` otherwise. |
+| `room:create` | `nickname`, optional `color` | Creates a new room and admits its creator into one of five slots. |
+| `room:join` | `inviteCode`, `nickname`, optional `color` | Admits a guest if the invite is valid and space is available. Returns `INVALID_INVITE` or `ROOM_FULL` otherwise. |
 | `room:resume` | `sessionToken` | Restores the existing room and player identity before the reservation deadline. Returns `INVALID_SESSION` for unknown or expired tokens and `SESSION_ACTIVE` while the original connection is still active. |
 | `room:leave` | None | Removes the current connection's session immediately and returns `{ ok: true }`. A detached connection receives `NOT_IN_ROOM`. |
 
 Create, join and resume all reject a connection already in a room with `ALREADY_IN_ROOM`. Each successful admission privately acknowledges `{ ok: true, playerId, inviteCode, sessionToken, snapshot }`. The invite uses 128 random bits and a session token uses 256 random bits, encoded in unpadded Base64URL. Player IDs and room IDs are UUIDs. Nicknames are trimmed and normalized to NFC, then checked for a length of 1–24 UTF-16 code units and for disallowed control and markup characters. Duplicate nicknames are allowed.
 
-`room:snapshot` is sent only to currently connected members after a membership or connection change and can precede that operation's acknowledgment. It carries `version`, `roomId` and roster entries with `playerId`, `nickname` and `connected`. Invitation and session tokens are absent from these events. Socket.IO preserves snapshot order per connection. The creator has the same room permissions as each guest.
+`room:snapshot` is sent only to currently connected members after a membership or connection change and can precede that operation's acknowledgment. It carries `version`, `roomId` and roster entries with `playerId`, `nickname`, `color` and `connected`. Allowed colors are `marigold` (default), `rose`, `mint` and `indigo`. Invitation and session tokens are absent from these events. Socket.IO preserves snapshot order per connection. The creator has the same room permissions as each guest.
+
+The browser stores the most recent room's credentials in session storage to recover after a reload in that tab. Sharing its URL shares the invitation code only. When tab storage is unavailable, reconnect can use in-memory credentials while the page remains open.
 
 A disconnected session reserves its slot for `MELA_RECONNECT_GRACE_MS` (default 30 seconds). The session expires at the deadline. Once its last session is removed, the empty room still accepts joins for `MELA_EMPTY_ROOM_TTL_MS` (default 60 seconds), then its invite expires. The server uses a monotonic clock, a one-second background sweep, and deadline checks on admission. A process restart clears all rooms and reservations.
 

@@ -120,3 +120,21 @@ try {
 | `npm run test:e2e` | Not applicable until CP-05. No UI changed. |
 
 For the faster isolated integration run, set `$env:MELA_TEST_ROOM_GRACE_MS = "2500"` before using the PowerShell recipe above. Add `-e MELA_RECONNECT_GRACE_MS=$env:MELA_TEST_ROOM_GRACE_MS` to its `docker compose run` command and remove `Env:MELA_TEST_ROOM_GRACE_MS` afterward. With the default grace period the expiry test takes about 30 seconds.
+
+## 7. Browser acceptance
+
+From a clean checkout on Windows, run `npm ci`, `npx playwright install chromium --only-shell`, and `docker compose up --build -d --wait`. Then run `npm run test:e2e`. On supported Linux test hosts, use `npx playwright install --with-deps --only-shell chromium` to install the browser and system packages.
+
+Playwright uses the running Docker app at `http://127.0.0.1:3000` by default. For an isolated Compose container, use the earlier PowerShell recipe and run `npm.cmd run test:e2e` while `MELA_TEST_URL` is set. The suite uses independent browser contexts for the host, guests, and a separate room. Screenshots and failure traces are written to the ignored `test-results/` directory.
+
+### CP-05 observed results (2026-11-25)
+
+| Check | Observed result |
+| --- | --- |
+| `npm.cmd ci`, `npx.cmd playwright install chromium --only-shell` | Exit 0. Installed 502 packages, audited 509, and reported zero vulnerabilities. Playwright 1.65.1 installed Chrome Headless Shell 159.0.8154.6. |
+| `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run test:unit`, `npm.cmd run build` | Final commands all exited 0. Two unit files, seven tests passed. Initial lint rejected plain home anchors and typecheck flagged untyped acknowledgment results. Switched to Next Links and annotated the reply types. |
+| `docker compose config`, `docker compose up --build -d --wait --wait-timeout 90` | Final config and startup passed. The first build failed to bundle a shared `.mts` file in browser code. Renamed the shared module to `.ts` and declared ESM for its directory. The final Linux build passed. |
+| `docker compose ps`, `curl.exe -fsS http://localhost:3000/api/health`, `curl.exe -I -fsS http://localhost:3000/assets/lobby-mela.webp`, `docker compose logs --tail=100 app` | Exit 0. Loopback service healthy, readiness JSON reported `status: "ok"`, illustration returned HTTP 200 with type `image/webp` and 227578 bytes. Final startup logs contained no warnings or errors. |
+| `npm.cmd run test:integration` | Exit 0 on the final isolated app at `127.0.0.1:64663` with a 6000 ms reconnect grace. Two files, five tests passed in 6.96 seconds. |
+| `npm.cmd run test:e2e -- --output test-results/cp05-verified` | Exit 0 on the same isolated Docker app. Two tests passed in 4.8 seconds. The first attempt failed because broad alert locators also matched Next's route announcer. Fixed by scoping alerts to the join panel. Failed-run traces remain under `test-results/`. |
+| Screenshot inspection | Inspected the 1280×720 desktop lobby and five-person room, plus a 390 px narrow layout. The test checked for horizontal overflow and masked the invitation URL in the room screenshot. |

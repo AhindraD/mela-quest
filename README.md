@@ -2,7 +2,7 @@
 
 A cozy, browser-based 3D Indian festive carnival ("mela") for private groups of up to five players to explore, play mini-games, ride attractions, chat with a multilingual shopkeeper, and celebrate together.
 
-The current build includes a Next.js landing page, a readiness endpoint at `/api/health`, and a Socket.IO room backend for groups of up to five. Room creation, joining, and reconnect are available through the socket protocol. The browser lobby is planned for CP-05. [Progress ledger](docs/PROGRESS.md)
+Create a private room for up to five players, choose an avatar color, and invite friends from the browser lobby. The roster updates as guests join, reconnect, or leave. [Progress ledger](docs/PROGRESS.md)
 
 ## Planned Features (Roadmap)
 - Private invite-only rooms (max 5 players including host) with server-authoritative state
@@ -29,6 +29,8 @@ cp .env.example .env
 docker compose up --build -d
 ```
 - Open `http://127.0.0.1:3000` after `docker compose ps` reports the app healthy.
+- Enter a nickname, choose an avatar color, and select **Create room**. Share the link from the roster. Guests open the link and select **Join room**.
+- With the default localhost binding, try guest links in separate browser profiles on the same machine.
 - The environment file is optional for the current build.
 - **Shutdown:** `docker compose down`
 
@@ -40,9 +42,7 @@ Implemented in `CP-01`:
 - `npm run test:unit` (`vitest run tests/unit`)
 - `npm run build` (`next build --webpack`)
 - `npm run test:integration` (run against the Docker app; see [test instructions](docs/TESTING.md))
-
-Planned for later checkpoints:
-- `npm run test:e2e` (`CP-05`)
+- `npm run test:e2e` (install Playwright Chromium first and run against the Docker app)
 
 ## Sponsor Integrations Status
 | Integration | Purpose | Status |
@@ -52,7 +52,7 @@ Planned for later checkpoints:
 | NudgeBee | Operational monitoring & incident investigation | `NOT_STARTED` (planned CP-23) |
 
 ## Known Limitations
-- The current landing page is a preview. Gameplay and controls arrive in later checkpoints.
+- The browser lobby is available. The 3D scene and gameplay arrive in later checkpoints.
 - Room state is held in memory. Server restarts invalidate existing invites and guest sessions.
 
 ## Documentation

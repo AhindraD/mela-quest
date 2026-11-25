@@ -15,7 +15,7 @@ import {
   type PingResult,
   type RequestError,
   type ServerToClientEvents,
-} from "../shared/protocol.mts";
+} from "../shared/protocol.ts";
 import { RoomManager } from "./room-manager.mts";
 
 function requestBudget() {
@@ -96,11 +96,11 @@ export function attachTransport(httpServer: HttpServer) {
     const handlePing = requestHandler(pingSchema, requestBudget(), ({ echo }): PingResult =>
       ({ ok: true, version: PROTOCOL_VERSION, echo, serverTime: Date.now() }),
     );
-    const create = requestHandler(createRoomSchema, withinRoomBudget, ({ nickname }) =>
-      rooms.create(socket.id, nickname),
+    const create = requestHandler(createRoomSchema, withinRoomBudget, ({ nickname, color }) =>
+      rooms.create(socket.id, nickname, color),
     );
-    const join = requestHandler(joinRoomSchema, withinRoomBudget, ({ nickname, inviteCode }) =>
-      rooms.join(socket.id, inviteCode, nickname),
+    const join = requestHandler(joinRoomSchema, withinRoomBudget, ({ nickname, inviteCode, color }) =>
+      rooms.join(socket.id, inviteCode, nickname, color),
     );
     const resume = requestHandler(resumeRoomSchema, withinRoomBudget, ({ sessionToken }) =>
       rooms.resume(socket.id, sessionToken),

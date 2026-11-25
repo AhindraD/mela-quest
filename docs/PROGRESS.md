@@ -9,7 +9,7 @@
 | CP-02 | Docker runtime | VERIFIED |
 | CP-03 | Socket transport and protocol | VERIFIED |
 | CP-04 | Authoritative room manager | VERIFIED |
-| CP-05 | Lobby and invitation flow | NOT_STARTED |
+| CP-05 | Lobby and invitation flow | VERIFIED |
 | CP-06 | 3D scene foundation | NOT_STARTED |
 | CP-07 | Local avatar and controls | NOT_STARTED |
 | CP-08 | Networked movement | NOT_STARTED |
@@ -139,4 +139,19 @@
 - **Known issues and blockers:** Browser lobby and invitation links are CP-05 work. Rooms are process-local. The local container remains running.
 - **Decisions:** `ADR-008`.
 - **Next action:** CP-05 — Lobby and invitation flow.
+- **Approval to advance:** approved (2026-11-25)
+
+## CP-05 — Lobby and invitation flow
+
+- **Status:** VERIFIED
+- **Goal / requirement IDs:** `REQ-LOBBY-01`, `REQ-ROOM-01` through `REQ-ROOM-05`. Add browser create/join, avatar color, a shareable invite, roster, reload and accessible error states.
+- **Starting commit / baseline:** Clean CP-04 commit `8471737`.
+- **Changes and files:** Added the lobby and its socket lifecycle, tab-scoped reload recovery, server-owned avatar colors, an original ImageGen illustration, and a pinned Playwright suite.
+- **Commands actually executed:** Clean npm install, Playwright browser install, lint, typecheck, unit/integration tests, host and Docker production builds, Docker Compose readiness and logs, and Chromium E2E. Exact results are in [TESTING.md](TESTING.md).
+- **Results:** Seven unit tests, five integration tests and two E2E tests passed. Independent browser contexts verified capacity, room isolation, invite navigation, reload, keyboard submission, explicit leave, invalid links and the clipboard fallback.
+- **Evidence:** `test-results/cp05-verified/`. The final Docker image manifest digest was `sha256:953b13ffeabeb5b34215675861698b646fc8e1e01b366b2184c53d25471c4396`.
+- **Manual checks:** PASS. Inspected desktop lobby, five-guest roster and 390 px narrow lobby screenshots from the Docker-served Chromium session. Browser tests observed no console errors or uncaught exceptions across the main journey.
+- **Known issues and blockers:** Loopback links support testing on the same machine. Rooms are process-local. The healthy app remains running.
+- **Decisions:** `ADR-009`.
+- **Next action:** CP-06 — 3D scene foundation.
 - **Approval to advance:** pending

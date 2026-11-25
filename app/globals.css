@@ -5,7 +5,138 @@
 }
 
 body {
-  background-color: #130b1c;
-  color: #fdf6e9;
+  background: radial-gradient(ellipse at 18% 0%, #352039 0, #191321 44%, #14101c 82%);
+  color: #f8ecd9;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.lobby-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+  width: min(1120px, calc(100% - 64px));
+  min-height: 660px;
+  margin: 48px auto;
+  border: 1px solid #674b57;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #221928;
+  box-shadow: 0 30px 100px #0d09149e;
+}
+
+.lobby-poster {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(28px, 4vw, 54px);
+  background: linear-gradient(180deg, #19101e94, transparent 28%, #19101e1a 47%, #18101ff7 95%),
+    #30203a url("/assets/lobby-mela.webp") center 48% / cover no-repeat;
+}
+
+.lobby-wordmark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 750;
+  letter-spacing: .03em;
+}
+
+.lobby-wordmark span { color: #ffce78; font-size: 1.75rem; line-height: 1; }
+
+.lobby-poster h1, .lobby-panel h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: -.035em;
+}
+
+.lobby-poster h1 {
+  max-width: 11ch;
+  font-size: clamp(2.7rem, 4.4vw, 4.65rem);
+  line-height: 1;
+  text-wrap: balance;
+}
+
+.lobby-poster-copy p { color: #ebd3be; margin-top: 16px; }
+
+.lobby-panel {
+  align-self: center;
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: clamp(24px, 4.5vw, 64px);
+}
+
+.lobby-panel h2 { font-size: clamp(2.25rem, 3.3vw, 3.4rem); line-height: 1.03; }
+.lobby-panel h3 { font-weight: 700; }
+.lobby-intro, .lobby-muted { color: #d2becb; }
+.lobby-muted { font-size: .875rem; }
+.lobby-form { display: grid; gap: 10px; margin-top: 12px; }
+.lobby-form label, .lobby-form legend, .lobby-invite > label { font-size: .9rem; font-weight: 650; }
+.lobby-form fieldset { margin-top: 13px; }
+.lobby-form legend { margin-bottom: 10px; }
+
+.lobby-panel input:not([type="radio"]) {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 9px 12px;
+  background: #17121f;
+  border: 1px solid #705b6e;
+  border-radius: 9px;
+  color: #f8ecd9;
+}
+
+.lobby-panel input::placeholder { color: #b19dae; }
+.lobby-colors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+
+.lobby-choice {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px;
+  border: 1px solid #5b495c;
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+.lobby-choice input { accent-color: #ffcc7a; }
+.lobby-choice:has(:checked) { background: #382737; border-color: #d9a876; }
+.avatar-dot { width: 17px; height: 17px; flex: 0 0 17px; display: inline-block; border-radius: 50%; }
+.avatar-marigold { background: #ffc565; }
+.avatar-rose { background: #ee819c; }
+.avatar-mint { background: #80d9b4; }
+.avatar-indigo { background: #ac9aff; }
+
+.lobby-primary, .lobby-secondary {
+  min-height: 46px;
+  padding: 9px 14px;
+  border-radius: 9px;
+  font-size: .92rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.lobby-primary { margin-top: 14px; background: #ffd08b; color: #26182a; }
+.lobby-primary:hover:not(:disabled) { background: #ffe1a9; }
+.lobby-secondary { border: 1px solid #907487; color: #ffdcaa; white-space: nowrap; }
+.lobby-secondary:hover { background: #392a3c; }
+.lobby-primary:disabled, .lobby-text-button:disabled { opacity: .62; cursor: default; }
+.lobby-link, .lobby-text-button { width: fit-content; color: #ffdcaa; text-decoration: underline; text-underline-offset: 4px; font-size: .88rem; cursor: pointer; }
+.lobby-alert { border-left: 3px solid #f095a6; background: #43273c; padding: 10px 12px; color: #ffdfeb; font-size: .92rem; }
+.lobby-invite { display: grid; gap: 9px; margin: 7px 0 11px; }
+.lobby-invite > div { display: flex; gap: 8px; }
+.lobby-invite input { font-size: .84rem; }
+.lobby-heading-row, .lobby-roster-title { display: flex; justify-content: space-between; gap: 14px; align-items: baseline; }
+.lobby-roster-title p { color: #d2becb; font-size: .85rem; }
+.lobby-roster { display: grid; gap: 7px; }
+.lobby-roster li { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: #2e2332; border-radius: 8px; }
+.lobby-guest-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.lobby-reservation { font-size: .78rem; }
+.lobby-panel :focus-visible { outline: 2px solid #ffdcaa; outline-offset: 3px; }
+.lobby-panel h2:focus { outline-offset: 6px; }
+
+@media (max-width: 800px) {
+  .lobby-shell { width: min(560px, calc(100% - 32px)); grid-template-columns: 1fr; margin-block: 16px; min-height: 0; }
+  .lobby-poster { min-height: 325px; background-position: center 40%; }
+  .lobby-poster h1 { font-size: clamp(2.45rem, 8vw, 3.5rem); }
 }

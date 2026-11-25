@@ -112,3 +112,15 @@ Append-only record of material architecture and product decisions.
 - **Consequences:** Guests joining a full room may need to wait for a reserved slot. All state is process-local. Rosters expose connection status and stable IDs.
 - **Validation:** Clock-injected boundary tests and independent Socket.IO clients in the CP-04 Docker gate.
 - **Supersedes:** None.
+
+## ADR-009 — Invitation URL and browser session
+
+- **Date:** 2026-11-25
+- **Status:** Accepted
+- **Context:** The browser needs a shareable invitation, a single socket lifecycle, and a way to resume during reload.
+- **Options:** Use one lobby with an invite query or a separate route for each room. Store the guest token in tab storage or keep it in memory only.
+- **Decision:** Use `/?invite=<inviteCode>`, replace the URL on successful admission, and store the latest room's token in tab-scoped session storage. The URL exposes only the invitation code.
+- **Rationale:** The same page handles admission and the roster without remounting the socket during admission. Tab storage enables reload recovery.
+- **Consequences:** Each tab has one saved room session. Clearing or blocking tab storage removes reload recovery. When a guest explicitly leaves, the page clears their saved session and returns to the create screen.
+- **Validation:** Independent Chromium contexts, invite navigation, and same-tab reload against Docker.
+- **Supersedes:** The open invitation URL choice in CP-00.
