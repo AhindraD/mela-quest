@@ -1,4 +1,4 @@
-# Mela.io — Deployment & Runtime Contract
+# MelaQuest — Deployment & Runtime Contract
 
 > [!IMPORTANT]
 > Local runtime verification is tracked in [TESTING.md](TESTING.md). AWS deployment requires separate approval after the local release.

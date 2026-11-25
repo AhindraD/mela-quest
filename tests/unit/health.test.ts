@@ -8,7 +8,7 @@ describe("buildHealthStatus", () => {
 
     expect(result).toEqual({
       status: "ok",
-      service: "mela-io",
+      service: "mela-quest",
       uptimeSeconds: 42,
       timestamp: "2026-11-25T12:00:00.000Z",
     });

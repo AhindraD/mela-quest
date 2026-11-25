@@ -1,4 +1,4 @@
-# Mela.io
+# MelaQuest
 
 **Step into a cozy 3D Indian night fair (*mela*) with up to five friends — right in your browser.**
 
@@ -6,13 +6,18 @@ Create a private room, share one invite link, pick a **Man**, **Woman**, or **Ca
 
 ---
 
-## 51-Second Demo (with Voiceover)
+## Demo Video (with Voiceover)
 
 > Watch 3 players (`Mira`, `Asha`, and `Kabir`) join one room, play Balloon Stall together, chat in Hindi with live **Sarvam AI**, buy Warm Jalebi, board the Ferris wheel, and trigger shared fireworks.
 
+| Watch on YouTube |
+| :---: |
+| [![Watch MelaQuest Demo on YouTube](https://img.youtube.com/vi/w0q97w0jisA/hqdefault.jpg)](https://youtu.be/w0q97w0jisA?si=T7ah9R2-Z_ETPvCJ) |
+| **[▶ Watch MelaQuest Demo on YouTube](https://youtu.be/w0q97w0jisA?si=T7ah9R2-Z_ETPvCJ)** |
+
 <video src="docs/media/mela-demo.mp4" controls muted playsinline width="100%"></video>
 
-If the video player does not render in your viewer, open **[`docs/media/mela-demo.mp4`](docs/media/mela-demo.mp4)** directly. See **[the 60-second demo script](docs/SPONSOR-DEMO.md)** for the full storyboard.
+If the inline video player does not render in your viewer, watch on **[YouTube](https://youtu.be/w0q97w0jisA?si=T7ah9R2-Z_ETPvCJ)** or open **[`docs/media/mela-demo.mp4`](docs/media/mela-demo.mp4)** directly. See **[the 60-second demo script](docs/SPONSOR-DEMO.md)** for the full storyboard.
 
 ---
 
@@ -54,7 +59,7 @@ If the video player does not render in your viewer, open **[`docs/media/mela-dem
 
 ---
 
-## How Sponsor Products Power Mela.io
+## How Sponsor Products Power MelaQuest
 
 - **Sarvam AI ([`src/integrations/sarvam.mts`](src/integrations/sarvam.mts)):** Powers **Kaka**, the multilingual Mithai Shopkeeper, across English, Hindi, Tamil, Bengali, Telugu, and Marathi using live chat (`sarvam-105b-conversations`), speech-to-text (`saaras:v3`), and text-to-speech (`bulbul:v3`), with safe mock fallback when no API key is set.
 - **Flagsmith ([`src/integrations/flagsmith.mts`](src/integrations/flagsmith.mts)):** Controls live attraction availability (`balloon_game`, `ferris_wheel`, `ai_shopkeeper`, `fireworks`) and live event promos (`double_rewards` for 2× Balloon Stall coins) without redeploying, including an optional self-hosted Docker Compose profile.

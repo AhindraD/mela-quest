@@ -1,4 +1,4 @@
-# Mela.io — Architecture & Product Decisions
+# MelaQuest — Architecture & Product Decisions
 
 Append-only record of material architecture and product decisions.
 
@@ -7,7 +7,7 @@ Append-only record of material architecture and product decisions.
 ## ADR-001 — Single-Process Custom Node Server with In-Memory State
 - **Date:** 2026-11-25
 - **Status:** Accepted (mandated by `AGENTS.md` §3)
-- **Context:** Mela.io needs same-origin Next.js App Router pages and Socket.IO real-time multiplayer for private rooms of up to 5 players.
+- **Context:** MelaQuest needs same-origin Next.js App Router pages and Socket.IO real-time multiplayer for private rooms of up to 5 players.
 - **Options:**
   1. Custom Node.js HTTP server (`server.ts`) hosting Next.js + Socket.IO on the same origin with in-memory room state.
   2. Separate Next.js server + standalone WebSocket microservice + Redis adapter.

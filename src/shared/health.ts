@@ -1,6 +1,6 @@
 export interface HealthStatus {
   status: "ok";
-  service: "mela-io";
+  service: "mela-quest";
   uptimeSeconds: number;
   timestamp: string;
 }
@@ -11,7 +11,7 @@ export function buildHealthStatus(
 ): HealthStatus {
   return {
     status: "ok",
-    service: "mela-io",
+    service: "mela-quest",
     uptimeSeconds: Math.max(0, Math.floor(uptimeSeconds)),
     timestamp: now.toISOString(),
   };

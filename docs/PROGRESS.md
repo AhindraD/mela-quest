@@ -1,4 +1,4 @@
-# Mela.io — Checkpoint Progress Ledger
+# MelaQuest — Checkpoint Progress Ledger
 
 ## Summary
 

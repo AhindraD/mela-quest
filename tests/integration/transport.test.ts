@@ -33,7 +33,7 @@ afterEach(() => {
 test("two same-origin clients use independent connections across HTTP and WebSocket", async () => {
   const health = await fetch(new URL("/api/health", baseUrl), { signal: AbortSignal.timeout(2000) });
   expect(health.status).toBe(200);
-  expect(await health.json()).toMatchObject({ status: "ok", service: "mela-io" });
+  expect(await health.json()).toMatchObject({ status: "ok", service: "mela-quest" });
   const page = await fetch(baseUrl, { signal: AbortSignal.timeout(2000) });
   expect(page.status).toBe(200);
   expect(await page.text()).toContain("Welcome to the Festive Carnival");

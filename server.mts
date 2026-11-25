@@ -33,7 +33,7 @@ async function start() {
 
   server.listen(port, hostname);
   await once(server, "listening");
-  console.info(`Mela.io listening at http://${hostname}:${port}`);
+  console.info(`MelaQuest listening at http://${hostname}:${port}`);
 
   let stopping = false;
   async function stop() {
@@ -46,7 +46,7 @@ async function start() {
       await app.close();
       clearTimeout(deadline);
     } catch (error) {
-      console.error("Mela.io shutdown failed", error);
+      console.error("MelaQuest shutdown failed", error);
       process.exit(1);
     }
   }
@@ -56,6 +56,6 @@ async function start() {
 }
 
 await start().catch((error: unknown) => {
-  console.error("Mela.io startup failed", error);
+  console.error("MelaQuest startup failed", error);
   process.exit(1);
 });

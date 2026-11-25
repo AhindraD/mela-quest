@@ -72,7 +72,7 @@ export function Lobby({ initialInvite }: { initialInvite: string | null }) {
         voiceWithShopkeeper={voiceWithShopkeeper} contributeFireworks={contributeFireworks}
         onClose={closeCarnival} /> : (
         <section className="lobby-poster" aria-labelledby="carnival-title">
-          <p className="lobby-wordmark"><span aria-hidden="true">✷</span> Mela.io</p>
+          <p className="lobby-wordmark"><span aria-hidden="true">✷</span> MelaQuest</p>
           <div className="painted-fair-illustration" aria-hidden="true" />
           <div className="lobby-poster-copy">
             <h1 id="carnival-title">Welcome to the Festive Carnival</h1>

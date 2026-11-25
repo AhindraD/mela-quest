@@ -1,4 +1,4 @@
-# Mela.io — Testing & Verification
+# MelaQuest — Testing & Verification
 
 ## 1. Observed Environment (CP-00 — 2026-11-25)
 

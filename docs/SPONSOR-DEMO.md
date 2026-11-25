@@ -1,10 +1,10 @@
-# Mela.io — 60-second sponsor demo
+# MelaQuest — 60-second sponsor demo
 
 Record one real room with three independent browser profiles or devices. Use the host as the main view, with guest views inset only when they prove a shared event. Cut the real session to 60 seconds. Keep clicks, a balloon pop and Kaka’s voice audible. Skip intro cards and end on gameplay.
 
 | Time | Show | Say |
 | --- | --- | --- |
-| 0–8s | Host creates a private room and copies the invite. Two guests open that link in separate profiles. Jump-cut to the roster showing **3 of 5**. | “One invite brings three friends into Mela.io, our Indian night carnival.” |
+| 0–8s | Host creates a private room and copies the invite. Two guests open that link in separate profiles. Jump-cut to the roster showing **3 of 5**. | “One invite brings three friends into MelaQuest, our Indian night carnival.” |
 | 8–14s | Enter the fair. Show the man, woman and cat moving together past the fountain. Use a short guest inset to show the same moment. | “Pick an avatar and meet at the fountain. Everyone sees each other move.” |
 | 14–25s | Brief inset of the real Flagsmith flag flipping on. Keep a connected player's coin HUD visible as **(2x)** appears. Cut to two players popping balloons, then the shared scores and earned coins. | “Flagsmith turns on double rewards without a redeploy. We pop balloons, compare scores, and earn coins.” |
 | 25–39s | Open the Mithai Shop, choose Hindi, tap the mic and ask “जलेबी कितने की है?” Show the transcript and let Kaka’s real audio play. Then click **Buy** on Warm Jalebi and show the balance change. | “At the Mithai Shop, Sarvam AI lets us ask Kaka about jalebi in Hindi.” Then pause for the spoken exchange. |

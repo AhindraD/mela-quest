@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Mela.io — Festive Virtual Carnival",
+  title: "MelaQuest — Festive Virtual Carnival",
   description:
     "A cozy, browser-based 3D Indian festive carnival for private groups of up to five players.",
 };

@@ -1,9 +1,9 @@
-# Mela.io — Product & Technical Specifications
+# MelaQuest — Product & Technical Specifications
 
 Status: **Baseline Draft (CP-00)** — Subject to user confirmation before CP-01/CP-03 implementation.
 
 ## 1. Overview
-Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for private groups of up to **5 players total (host included)**. Players create or join a private room via an unguessable invitation URL, explore a compact low-poly night carnival together, play a balloon-popping mini-game for virtual coins, ride a synchronized Ferris wheel, buy virtual items from a multilingual shopkeeper, and collectively trigger a shared fireworks celebration.
+MelaQuest is a cozy, browser-based, 3D Indian festive carnival ("mela") for private groups of up to **5 players total (host included)**. Players create or join a private room via an unguessable invitation URL, explore a compact low-poly night carnival together, play a balloon-popping mini-game for virtual coins, ride a synchronized Ferris wheel, buy virtual items from a multilingual shopkeeper, and collectively trigger a shared fireworks celebration.
 
 ## 2. Scope & Non-Goals
 
