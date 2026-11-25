@@ -7,9 +7,9 @@
 
 - **Service:** `app` in `compose.yaml`
 - **Port Binding:** `127.0.0.1:3000:3000` by default (server listens on `0.0.0.0:3000` inside container). LAN testing requires explicit opt-in.
-- **Server:** Next.js production CLI. CP-03 introduces the custom HTTP server and same-origin Socket.IO on `/socket.io`.
+- **Server:** `node server.mts` starts the custom HTTP server and serves both Next.js and Socket.IO on `/socket.io`. Compose init forwards SIGTERM. The server closes its Socket.IO connections and HTTP listener, then releases Next.js resources.
 - **Image:** Node.js 24.11.1 LTS on Debian Bookworm Slim. The build stage installs the lockfile and compiles Next.js. The runtime stage uses production dependencies, the Next.js build and public assets, and runs under the `node` user. Compose init forwards signals to the Node process. The image health check polls `/api/health`.
-- **Environment:** Compose starts with built-in defaults. `.env.example` documents host settings and reserved sponsor variables. The Docker build context excludes environment files, and CP-02 requires no credentials.
+- **Environment:** The image sets `MELA_HOST=0.0.0.0` and `PORT=3000` for its internal listener. For host execution the server reads process environment variables and defaults to `127.0.0.1:3000`. The Docker build context excludes environment files. Sponsor credentials are reserved for later checkpoints.
 - **Commands:**
   - Start: `docker compose up --build -d`
   - Status: `docker compose ps`

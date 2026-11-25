@@ -88,3 +88,15 @@ Append-only record of material architecture and product decisions.
 - **Consequences:** CP-03 replaces the CLI command with its custom entry point. Revisit the base pin when dependency compatibility or Node.js maintenance warrants it.
 - **Validation:** Clean image build, healthy startup, browser render, SIGTERM stop, and healthy restart in CP-02.
 - **Supersedes:** None.
+
+## ADR-007 — Run the custom TypeScript server with Node type stripping
+
+- **Date:** 2026-11-25
+- **Status:** Accepted
+- **Context:** The custom server must run beside the standard Next.js build in one Node process.
+- **Options:** Run erasable TypeScript on the pinned Node line, or compile the custom entry point separately.
+- **Decision:** Use `server.mts` with native Node type stripping and explicit source extensions. Retain the repository's TypeScript check as a separate gate.
+- **Rationale:** The pinned image already supports erasable TypeScript. The server does not require TypeScript path aliases or syntax that emits extra JavaScript.
+- **Consequences:** Custom server imports must resolve directly in Node. Next.js continues to build browser code separately. Revisit if the server needs compile-time transforms or path aliases.
+- **Validation:** Host typecheck and production image runtime checks are part of CP-03.
+- **Supersedes:** The CLI entry point portion of ADR-006.

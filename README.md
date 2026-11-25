@@ -2,7 +2,7 @@
 
 A cozy, browser-based 3D Indian festive carnival ("mela") for private groups of up to five players to explore, play mini-games, ride attractions, chat with a multilingual shopkeeper, and celebrate together.
 
-The current build includes a Next.js landing page, a readiness endpoint at `/api/health`, and a local Docker Compose setup. Checkpoint results are in the [progress ledger](docs/PROGRESS.md).
+The current build includes a Next.js landing page, a readiness endpoint at `/api/health`, and a same-origin Socket.IO transport at `/socket.io`. Checkpoint results are in the [progress ledger](docs/PROGRESS.md).
 
 ## Planned Features (Roadmap)
 - Private invite-only rooms (max 5 players including host) with server-authoritative state
@@ -39,9 +39,10 @@ Implemented in `CP-01`:
 - `npm run typecheck` (`tsc --noEmit`)
 - `npm run test:unit` (`vitest run tests/unit`)
 - `npm run build` (`next build --webpack`)
+- `npm run test:integration` (run against the Docker app; see [test instructions](docs/TESTING.md))
 
 Planned for later checkpoints:
-- `npm run test:integration` (`CP-03`), `npm run test:e2e` (`CP-05`)
+- `npm run test:e2e` (`CP-05`)
 
 ## Sponsor Integrations Status
 | Integration | Purpose | Status |

@@ -4,6 +4,7 @@
 !next.config.ts
 !postcss.config.mjs
 !tsconfig.json
+!server.mts
 !app/
 !app/**
 !src/

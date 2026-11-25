@@ -33,6 +33,7 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
 | `REQ-ROOM-03` | Rooms | Guest identity uses a server-issued random session token (never nickname or socket ID); tokens are never broadcast to other players. |
 | `REQ-ROOM-04` | Rooms | Reconnect within a configurable grace period restores session state while the server process lives; expired sessions release capacity and empty rooms expire. |
 | `REQ-ROOM-05` | Rooms | Nicknames are length-bounded, sanitized, and rendered as plain text (XSS-safe). |
+| `REQ-NET-01` | Transport | One HTTP listener serves Next.js and accepts same-origin Socket.IO connections. Independently connected clients receive versioned acknowledgments and can reconnect. |
 | `REQ-WORLD-01` | World | Compact, bounded, low-poly night carnival with central plaza & fountain, spawn area, paths, balloon stall, mithai shop, Ferris wheel, decorative stalls, and music/dance area. |
 | `REQ-WORLD-02` | World | Warm lanterns, festive colors, readable signs, and unobstructed spawn. |
 | `REQ-MOVE-01` | Movement | Desktop-first third-person camera, `WASD`/Arrow movement (diagonal normalized), `E` to interact, `Escape` to close overlays. |
@@ -64,9 +65,10 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
 
 ## 5. Architecture & Protocol Baseline
 - **Stack:** Next.js App Router, TypeScript (`strict: true`), React Three Fiber, Three.js, Drei, Socket.IO (client & server), Zustand, Tailwind CSS, Zod, Node.js LTS.
-- **Local runtime (CP-02):** Docker Compose runs the production Next.js CLI as a non-root user on Node.js 24.11.1 LTS. Compose publishes `127.0.0.1:3000` and the image checks `/api/health`. The custom server begins in CP-03.
-- **Transport:** Single custom Node HTTP server hosting Next.js and Socket.IO on the same origin (`/socket.io`). No Next.js `standalone` output.
-- **Protocol Events (Proposed, to be specified with Zod schemas in CP-03/CP-04):**
+- **Local runtime:** Docker Compose runs the custom server as a non-root user on Node.js 24.11.1 LTS. Compose publishes `127.0.0.1:3000` and the image checks `/api/health`.
+- **Transport:** One HTTP listener hosts Next.js and Socket.IO 4.8.4 on `/socket.io`. Both polling and WebSocket are supported. A browser handshake with an explicit Origin must match the incoming HTTP Host. Clients without an Origin, such as CLI probes, are accepted. Public HTTPS and proxy handling are future deployment work.
+- **Implemented protocol v1:** Client event `transport:ping` takes one object with `version: 1` and `echo` (a string of up to 128 UTF-16 code units). The caller must supply an acknowledgment callback. Replies are `{ ok: true, version: 1, echo, serverTime }` or `{ ok: false, code }`. `serverTime` is the server's Unix time in milliseconds. Malformed payloads and unsupported versions return `INVALID_PAYLOAD`; the eleventh acknowledged request in a one-second per-connection window returns `RATE_LIMITED`. Requests without callbacks are ignored. Transport messages larger than 4096 bytes are rejected by Engine.IO. The diagnostic has no room authorization, sequence counters or session state. Each reconnect creates a new transport identity and rate window.
+- **Proposed gameplay events (runtime schemas and authorization arrive with each feature):**
   - Client -> Server: `room:create`, `room:join`, `room:resume`, `room:leave`, `player:input`, `attraction:interact`, `game:join`, `game:hit`, `shop:purchase`, `ride:board`, `ride:exit`, `fireworks:contribute`.
   - Server -> Client: `room:snapshot`, `player:joined`, `player:left`, `world:snapshot`, `game:state`, `economy:updated`, `ride:state`, `fireworks:started`, `flags:updated`, `session:error`.
 - **Validation & Security:** All untrusted Socket.IO and HTTP payloads validated with Zod. Finite numeric checks on all coordinates/inputs. Server timestamps and sequence numbers on movement/events. Idempotency keys on all economy mutations.

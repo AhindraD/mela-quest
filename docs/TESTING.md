@@ -71,3 +71,38 @@ These commands will be established in CP-01/CP-02 and run at every applicable ch
 ## 4. Manual Verification Instructions
 
 Run `docker compose up --build -d --wait`. Open `http://127.0.0.1:3000/` in a desktop browser and confirm the welcome heading is visible. Check the developer console, run `curl.exe -fsS http://localhost:3000/api/health` on Windows, and inspect `docker compose logs --tail=100 app`. To verify restart, run `docker compose stop app` followed by `docker compose start --wait app` and repeat the health probe.
+
+## 5. CP-03 Socket.IO transport (2026-11-25)
+
+| Check | Observed result |
+| --- | --- |
+| Dependency install and audit | The first Zod pin triggered one high-severity advisory. Updated to Zod 4.6.7. Final `npm.cmd ci` exited 0 with 499 packages installed, 506 audited and zero reported vulnerabilities. |
+| `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run test:unit`, `npm.cmd run build` | First typecheck failed with TS2540 on assignment to Next.js's read-only `NODE_ENV` type. After correcting initialization, all four host commands exited 0. One unit test file, two tests passed. |
+| `docker compose config`, `docker compose build --no-cache app`, `docker compose up --build -d --wait --wait-timeout 90` | Config exited 0. Clean build installed both dependency sets and hit the same TS2540 error. Rebuild reused those install layers, reran the corrected production build, and exited 0 with the service healthy. |
+| `npm.cmd run test:integration` | Exit 0. One file, three tests passed in 783 ms on an isolated Compose app at `127.0.0.1:52961`. Independent polling and WebSocket clients received their own echoes. The WebSocket client disconnected and reconnected with a new socket ID. Missing, wrong-version, wrong-type and too-long payloads were rejected. The ping rate limit and cross-origin handshake rejection passed. Landing and health returned HTTP 200. |
+| `docker compose ps`, `curl.exe -fsS http://localhost:3000/api/health`, `docker compose exec -T app id`, `docker compose logs --tail=100 app` | Exit 0. Canonical service healthy at loopback on port 3000, UID/GID 1000, readiness JSON returned `status: "ok"`. Logs showed the custom listener without fatal errors. |
+| `docker compose stop app`, `docker inspect`, `docker compose start --wait --wait-timeout 60 app` | Exit 0. Observed container state `exited 0 false` (not OOM-killed), then a healthy restart and a fresh HTTP readiness response. |
+| `npm run test:e2e` | Not applicable before CP-05. No visual change in CP-03. |
+
+To repeat the integration suite in isolation on Windows, build the app image with `docker compose build app`, then run:
+
+```powershell
+$testContainer = "mela-transport-test-$PID"
+docker compose run -d --rm --no-deps --name $testContainer -p '127.0.0.1::3000' app
+try {
+    $binding = docker port $testContainer 3000/tcp
+    $env:MELA_TEST_URL = "http://$binding"
+    $deadline = (Get-Date).AddSeconds(30)
+    do {
+        $health = docker inspect --format '{{.State.Health.Status}}' $testContainer
+        if ($health -eq 'healthy') { break }
+        if ($health -eq 'unhealthy' -or (Get-Date) -gt $deadline) { throw "Test container health: $health" }
+        Start-Sleep -Milliseconds 250
+    } while ($true)
+    npm.cmd run test:integration
+} finally {
+    docker logs --tail=100 $testContainer
+    docker stop $testContainer
+    Remove-Item Env:MELA_TEST_URL -ErrorAction SilentlyContinue
+}
+```

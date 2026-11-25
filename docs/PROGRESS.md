@@ -7,7 +7,7 @@
 | CP-00 | Discovery and project contract | VERIFIED |
 | CP-01 | Reproducible Next.js skeleton | VERIFIED |
 | CP-02 | Docker runtime | VERIFIED |
-| CP-03 | Socket transport and protocol | NOT_STARTED |
+| CP-03 | Socket transport and protocol | VERIFIED |
 | CP-04 | Authoritative room manager | NOT_STARTED |
 | CP-05 | Lobby and invitation flow | NOT_STARTED |
 | CP-06 | 3D scene foundation | NOT_STARTED |
@@ -109,4 +109,19 @@
 - **Known issues and blockers:** Docker Engine commands require access outside the sandbox. Integration and browser E2E suites are introduced in CP-03 and CP-05. The local service remains running for review.
 - **Decisions:** `ADR-004`, `ADR-006`.
 - **Next action:** CP-03 — Socket transport and protocol.
+- **Approval to advance:** approved (2026-11-25)
+
+## CP-03 — Socket transport and protocol
+
+- **Status:** VERIFIED
+- **Goal / requirement IDs:** `REQ-NET-01`, `REQ-OPS-01`. Serve Next.js and Socket.IO on one listener and verify typed acknowledgments, validation, reconnect and HTTP readiness with independent clients against Compose.
+- **Starting commit / baseline:** `46217b9` plus verified, uncommitted CP-02 changes.
+- **Changes and files:** Custom server in `server.mts`, typed Zod protocol and listener modules under `src/`, transport tests under `tests/integration/`, pinned dependencies, Docker runtime entry point and living docs.
+- **Commands actually executed:** `npm ci`, lint, typecheck, unit/integration tests, host build, Compose config/build/start/status/logs, HTTP probe, UID check and stop/start. See [TESTING.md](TESTING.md) for commands and results.
+- **Results:** Two unit and three integration tests passed. The first host typecheck and Docker build failed with TS2540, resolved on rerun. Final Compose service healthy before and after graceful shutdown, with HTTP readiness and no fatal startup errors.
+- **Evidence:** [TESTING.md](TESTING.md). Local image manifest digest `sha256:3035b69e1c887d7db86b1a62aeefea54967a85a24cd56f07f5ee2b73b8a0298c`.
+- **Manual checks:** NOT RUN. No UI changed, and the integration suite verified HTTP responses and real socket transport.
+- **Known issues and blockers:** Docker Engine commands require access outside the sandbox. Room identity, authorization and resume state are CP-04 work. The local service remains running.
+- **Decisions:** `ADR-001`, `ADR-007`.
+- **Next action:** CP-04 — Authoritative room manager.
 - **Approval to advance:** pending
