@@ -16,6 +16,8 @@ All visual and audio assets used in Mela.io must be recorded here with their pat
 | `app/world/avatar.tsx` | Playable man, woman, and cat models | Mela.io project | Original beveled blocks and low-sided primitives with flat materials | Project source code, no separately licensed models or textures | No external artist credit | Used for CP-07 local avatars |
 | `public/assets/painted-wood-a.webp` | Approved Prototype A design sheet, cropped by CSS for the lobby | OpenAI ImageGen, directed for Mela.io | Original concept image ending in `5fe503cc64ba.png`, resized to WebP | Project-generated artwork | No external artist credit | Design reference and lobby |
 | `public/assets/painted-avatars.webp` | 4 accent columns × 3 character rows | Mela.io project | Transparent Chromium renders of the playable meshes | Project-generated artwork | No external artist credit | Room avatar picker |
+| `docs/media/01-lobby-room.png` – `06-fireworks.png` | Six gameplay screenshots covering lobby, 3-player plaza, Balloon Stall, Mithai Shop (live Sarvam AI Hindi chat), Ferris Wheel, and Fireworks | Mela.io project | Captured from Docker-served Chromium session | Project-generated screenshots | No external artist credit | Used in `README.md` |
+| `docs/media/mela-demo.mp4` | 51.4-second voiced demo video of a 3-player session (`Mira`, `Asha`, `Kabir`) | Mela.io project | Playwright Chromium capture muxed with Sarvam AI `bulbul:v3` TTS narration via `ffmpeg` | Project-generated media | No external artist credit | Used in `README.md` |
 
 ### Lobby illustration prompt
 
