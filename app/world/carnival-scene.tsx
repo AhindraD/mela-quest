@@ -3,10 +3,12 @@
 import { AdditiveBlending, NoToneMapping } from "three";
 import { Canvas, useThree } from "@react-three/fiber";
 import { useEffect, useState, type RefObject } from "react";
-import type { AvatarColor } from "../../src/shared/protocol.ts";
+import type { GroundPoint } from "../../src/shared/movement";
+import type { AvatarColor, PlayerPose } from "../../src/shared/protocol.ts";
 import type { AvatarKind } from "../../src/shared/world";
 import { LocalPlayer } from "./local-player";
 import { PreviewFallback } from "./preview-fallback";
+import { RemotePlayers } from "./remote-players";
 import { buildFair } from "./painted-fair";
 
 const fair = buildFair();
@@ -31,10 +33,14 @@ function supportsWebGL() {
   }
 }
 
-export default function CarnivalScene({ surface, kind, color }: {
+export default function CarnivalScene({ surface, kind, color, initial, authoritative, remotes, onInput }: {
   surface: RefObject<HTMLElement | null>;
   kind: AvatarKind;
   color: AvatarColor;
+  initial: GroundPoint & { yaw: number };
+  authoritative: (GroundPoint & { yaw: number }) | null;
+  remotes: PlayerPose[];
+  onInput: (input: GroundPoint) => void;
 }) {
   const [supported] = useState(supportsWebGL);
   const [ready, setReady] = useState(false);
@@ -59,7 +65,9 @@ export default function CarnivalScene({ surface, kind, color }: {
           <mesh geometry={fair.glows} dispose={null}>
             <meshBasicMaterial vertexColors transparent depthWrite={false} blending={AdditiveBlending} />
           </mesh>
-          <LocalPlayer surface={surface} kind={kind} color={color} />
+          <LocalPlayer surface={surface} kind={kind} color={color} initial={initial}
+            authoritative={authoritative} onInput={onInput} />
+          <RemotePlayers players={remotes} />
         </Canvas>
       </div>
     </>

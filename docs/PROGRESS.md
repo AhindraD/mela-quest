@@ -12,7 +12,7 @@
 | CP-05 | Lobby and invitation flow | VERIFIED |
 | CP-06 | 3D scene foundation | VERIFIED |
 | CP-07 | Local avatar and controls | VERIFIED |
-| CP-08 | Networked movement | NOT_STARTED |
+| CP-08 | Networked movement | VERIFIED |
 | CP-09 | Carnival art pass | NOT_STARTED |
 | CP-10 | Interaction framework and HUD | NOT_STARTED |
 | CP-11 | Economy and inventory | NOT_STARTED |
@@ -188,7 +188,7 @@ The user approved Painted Wood (option A) and requested a woman and a cat alongs
 - **Known issues and blockers:** Avatar type and movement are local. The browser checks used software WebGL. The local Docker service remains healthy.
 - **Decisions:** `ADR-010`, `ADR-012`.
 - **Next action:** CP-08 — Networked movement.
-- **Approval to advance:** pending
+- **Approval to advance:** approved (2026-11-25, CP-08 requested)
 
 ### CP-07 visual revision — Prototype A
 - **Status:** VERIFIED for implementation and regression checks. Owner visual sign-off pending.
@@ -197,4 +197,19 @@ The user approved Painted Wood (option A) and requested a woman and a cat alongs
 - **Evidence:** [Prototype A alongside the Docker-served game](design/painted-wood-comparison.webp). Original captures and three avatar views in `test-results/painted-wood-reviewed/`. Desktop and narrow visual review PASS.
 - **Commands:** npm ci, lint, typecheck, test:unit, build, Compose config/up/ps/logs, HTTP health probe, test:integration and test:e2e. All final checks exited 0. Passed 17 unit, 5 socket integration and 5 browser tests. See TESTING.md for the initial failures and reruns.
 - **Decision and limitations:** ADR-013. The playable rendition retains wider routes and simpler lighting than the reference. Software WebGL verified rendering and controls. Device GPU performance is unmeasured.
-- **Next action:** Owner review of the visual match. CP-08 approval pending.
+- **Next action:** Owner review of the visual match remains open. CP-08 proceeded on request.
+
+## CP-08 — Networked movement
+
+- **Status:** VERIFIED
+- **Goal / requirement IDs:** `REQ-MOVE-03`, with `REQ-ROOM-02`, `REQ-ROOM-04`, and `REQ-AVATAR-01`. Server-owned poses, sequenced input, 20 Hz snapshots, remote interpolation, room isolation, disconnect grace, resume, and rejection of teleporting input.
+- **Starting commit / baseline:** `b9c49a6` plus the uncommitted CP-08 working tree.
+- **Changes and files:** Added `src/server/world.mts`, remote avatar rendering, movement socket events, client prediction and interpolation, unit and socket tests, and a five-browser Playwright check. Updated the room manager, transport, lobby, scene, specs, and decisions (`ADR-014`).
+- **Commands actually executed:** `npm ci`, lint, typecheck, unit tests, and host production build. Compose config and two image builds. The first container exited 1. After removing a parameter property, the second build became healthy. Isolated integration runs, Playwright, a stop/start cycle, health probes, UID check, and logs. See [TESTING.md](TESTING.md).
+- **Results:** Final host lint, typecheck, and 22 unit tests passed. Isolated sockets: 7 tests passed in 8.97 seconds. Chromium: 6 tests passed in 1.4 minutes, including two browsers and then five browsers seeing movement. Observed snapshot median interval `49.76710000000003` ms across 14 gaps; input to a visible pose change `68.899` ms.
+- **Evidence:** `test-results/cp08/`. Image ID `sha256:fc7228e526200ed5b2cdffba985164179e3fd64dd10f53a46e7a9f8edbdbbc60`.
+- **Manual checks:** PASS for the Docker-served Chromium captures. The guest view shows the host avatar beside the local avatar. The fifth browser shows the moved avatar separated from the cluster at the entrance. Software WebGL only.
+- **Known issues and blockers:** Guests overlap at the shared spawn. Remote motion trails the server by about one 50 ms tick. A stalled tick does not catch up more than 100 ms. Hardware GPU frame time was not measured. Rooms and poses still disappear on process restart. The healthy app remains on localhost.
+- **Decisions:** `ADR-014`.
+- **Next action:** CP-09 — Carnival art pass, after approval. The Prototype A visual review is still open.
+- **Approval to advance:** pending

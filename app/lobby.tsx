@@ -18,7 +18,9 @@ const colorLabels: Record<AvatarColor, string> = {
 };
 
 export function Lobby({ initialInvite }: { initialInvite: string | null }) {
-  const { invite, room, connection, busy, error, enter, leave, retry } = useLobby(initialInvite);
+  const {
+    invite, room, world, connection, busy, error, enter, leave, retry, enterWorld, leaveWorld, sendInput,
+  } = useLobby(initialInvite);
   const [nickname, setNickname] = useState("");
   const [color, setColor] = useState<AvatarColor>(DEFAULT_AVATAR_COLOR);
   const [avatarKind, setAvatarKind] = useState<AvatarKind>("Man");
@@ -38,6 +40,12 @@ export function Lobby({ initialInvite }: { initialInvite: string | null }) {
     previousRoom.current = roomId;
   }, [roomId]);
 
+  useEffect(() => {
+    if (previewOpen || connection !== "ready" || !room || !world) return;
+    if (!world.players.some((player) => player.playerId === room.playerId)) return;
+    void leaveWorld();
+  }, [connection, leaveWorld, previewOpen, room, world]);
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     void enter(nickname, color);
@@ -50,7 +58,8 @@ export function Lobby({ initialInvite }: { initialInvite: string | null }) {
 
   return (
     <main className="lobby-shell">
-      {previewOpen ? <CarnivalPreview kind={avatarKind} color={avatarColor} onClose={closeCarnival} /> : (
+      {previewOpen && room ? <CarnivalPreview kind={avatarKind} color={avatarColor} playerId={room.playerId}
+        world={world} enterWorld={enterWorld} leaveWorld={leaveWorld} sendInput={sendInput} onClose={closeCarnival} /> : (
         <section className="lobby-poster" aria-labelledby="carnival-title">
           <p className="lobby-wordmark"><span aria-hidden="true">✷</span> Mela.io</p>
           <div className="painted-fair-illustration" aria-hidden="true" />

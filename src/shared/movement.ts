@@ -7,6 +7,13 @@ export interface GroundPoint {
 
 export const WALK_SPEED = 5;
 export const PLAYER_RADIUS = 0.45;
+export const SPAWN_YAW = Math.PI * 0.88;
+export const SNAPSHOT_INTERVAL_MS = 50;
+export const INPUT_REFRESH_MS = 100;
+export const INPUT_TIMEOUT_MS = 300;
+export const INPUT_RATE = 30;
+export const MAX_INPUT_SEQUENCE = 1_000_000_000;
+export const CORRECTION_DISTANCE = 3;
 const EDGE_CLEARANCE = PLAYER_RADIUS + 0.31;
 const MAX_FRAME_SECONDS = 0.1;
 const MAX_STEP_DISTANCE = 0.12;
@@ -70,4 +77,19 @@ export function walk(position: GroundPoint, input: GroundPoint, seconds: number)
   }
 
   return x === position.x && z === position.z ? position : { x, z };
+}
+
+export function facingYaw(input: GroundPoint) {
+  return Math.atan2(-input.x, -input.z);
+}
+
+export function interpolatePoint(from: GroundPoint, to: GroundPoint, alpha: number): GroundPoint {
+  const t = Math.min(1, Math.max(0, alpha));
+  return { x: from.x + (to.x - from.x) * t, z: from.z + (to.z - from.z) * t };
+}
+
+export function interpolateYaw(from: number, to: number, alpha: number) {
+  const t = Math.min(1, Math.max(0, alpha));
+  const turn = Math.atan2(Math.sin(to - from), Math.cos(to - from));
+  return from + turn * t;
 }

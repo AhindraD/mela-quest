@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { PLAYER_RADIUS, WALK_SPEED, walk, type GroundPoint } from "../../src/shared/movement";
+import { PLAYER_RADIUS, WALK_SPEED, interpolatePoint, interpolateYaw, walk, type GroundPoint } from "../../src/shared/movement";
 import { LANDMARK_FOOTPRINTS, SPAWN_POSITION, WORLD_BOUNDS } from "../../src/shared/world";
 
 const spawn = { x: SPAWN_POSITION[0], z: SPAWN_POSITION[2] };
@@ -69,6 +69,14 @@ test("the diagonal corner rail stops travel through the cut-off corner", () => {
   const end = simulate({ x: 14, z: -7 }, { x: 1, z: -1 }, 3, 60);
   expect(end.x - end.z).toBeLessThan(26 - PLAYER_RADIUS);
   expect(end.x - end.z).toBeGreaterThan(24.8);
+});
+
+test("interpolation stays on the segment and takes the short turn", () => {
+  expect(interpolatePoint({ x: 0, z: 0 }, { x: 10, z: -4 }, 0.25)).toEqual({ x: 2.5, z: -1 });
+  expect(interpolatePoint({ x: 0, z: 0 }, { x: 10, z: 0 }, -1)).toEqual({ x: 0, z: 0 });
+  expect(interpolatePoint({ x: 0, z: 0 }, { x: 10, z: 0 }, 2)).toEqual({ x: 10, z: 0 });
+  expect(interpolateYaw(0.1, Math.PI * 2 - 0.1, 0.5)).toBeCloseTo(0);
+  expect(interpolateYaw(0, 1, 0.5)).toBeCloseTo(0.5);
 });
 
 test("the planting bed stops an approach from the entrance side", () => {

@@ -169,3 +169,15 @@ Append-only record of material architecture and product decisions.
 - **Rationale and consequences:** The avatar occupies less of the entrance view. The picker provides a close-up with the selected accent. Three batched meshes cover the static fair, bulbs and halos. A small procedural ground texture handles soft grounding. Lighting requires no per-lantern lights or shadow maps.
 - **Validation and reversal:** Compare the approved sheet with the desktop and narrow Chromium captures and exercise movement and focus. Revisit the framing if player navigation suffers.
 - **Supersedes:** The close framing of ADR-012.
+
+## ADR-014 — Server-owned movement at 20 Hz
+
+- **Date:** 2026-11-25
+- **Status:** Accepted
+- **Context:** CP-08 needs guests to see one another move without letting a client choose its own coordinates.
+- **Options:** Relay client positions, or simulate shared walk input on the server and interpolate the results.
+- **Decision:** Clients send sequenced axis input when it changes and every 100 ms while held. The server ticks the shared walk function every 50 ms, caps a late tick at 100 ms, and broadcasts a room snapshot each tick. Local avatars predict; remote avatars interpolate over one tick. A disconnect freezes the pose until the room reconnect grace expires.
+- **Rationale:** The same collision rules run in both places. Rejecting positions, non-finite values, and stale sequences prevents a snapshot from teleporting someone. The input timeout stops a guest whose stop message is lost.
+- **Consequences:** Remote motion is about one tick behind the server. A stalled server tick does not catch up the full gap. Prediction can be up to 3 units ahead before the local avatar corrects.
+- **Validation:** Unit simulation, real socket clients, and Chromium sessions against the Docker app.
+- **Supersedes:** The local-only position statement in ADR-012.

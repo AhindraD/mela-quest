@@ -32,7 +32,7 @@ docker compose up --build -d
 ```
 - Open `http://127.0.0.1:3000` after `docker compose ps` reports the app healthy.
 - Enter a nickname, choose an avatar color, and select **Create room**. Share the link from the roster. Guests open the link and select **Join room**.
-- Choose **Man**, **Woman**, or **Cat**, then select **Enter carnival**. Use WASD or the arrow keys to move and Escape to return to the room. Local play requires WebGL 2.
+- Choose **Man**, **Woman**, or **Cat**, then select **Enter carnival**. Use WASD or the arrow keys to move and Escape to return to the room. Friends in the same room see your avatar move. The scene requires WebGL 2.
 - With the default localhost binding, try guest links in separate browser profiles on the same machine.
 - The environment file is optional for the current build.
 - **Shutdown:** `docker compose down`
@@ -55,7 +55,7 @@ Implemented in `CP-01`:
 | NudgeBee | Operational monitoring & incident investigation | `NOT_STARTED` (planned CP-23) |
 
 ## Known Limitations
-- Avatar movement is local to each browser. Networked movement and attractions arrive in later checkpoints.
+- Attractions, coins, and the shop are not available yet. Other rooms cannot see your avatar. A server restart clears rooms and poses.
 - Room state is held in memory. Server restarts invalidate existing invites and guest sessions.
 
 ## Documentation

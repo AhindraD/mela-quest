@@ -78,7 +78,14 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
 - **Entry and focus:** Choose **Man**, **Woman**, or **Cat** in the room and select **Enter carnival**. The local form reuses the guest's room accent color. Entering or clicking the scene focuses movement. Moving focus to room or text controls, opening a dialog, hiding the tab, or blurring the window clears held keys. Escape returns to the room and focuses **Enter carnival**.
 - **Movement:** WASD and arrow keys move at five world units per second across the ground plane, with diagonals capped to the same speed. Elapsed time drives motion. A frame is capped at 100 ms and subdivided into steps at most 0.12 units to limit large jumps and obstacle tunneling.
 - **Collision and camera:** Every avatar has the same 0.45-unit collision radius. Ground bounds and the shared landmark footprints block movement and support sliding along edges. The perspective camera translates with the avatar while keeping the entrance-to-plaza orientation fixed.
-- **Session scope:** The character choice is local to the page. Re-entering starts the avatar at the shared spawn. Position and avatar type are not sent over Socket.IO in this checkpoint.
+- **Session scope:** The character choice is made in the room. CP-08 sends the chosen avatar and server-owned pose to other guests.
+
+#### CP-08 networked movement
+
+- **Presence:** Entering the carnival sends `world:enter` with the selected avatar and places that guest at the shared spawn, facing yaw `0.88π`. Entering again updates the avatar and keeps the current pose and input sequence. Escape or **Return to room** sends `world:leave` and removes the avatar immediately. A dropped connection keeps the pose, stops input, and leaves the avatar visible at 45% opacity until `MELA_RECONNECT_GRACE_MS` expires. Resume continues from that pose. A full reload returns to the room and leaves the carnival, so the avatar is removed without waiting for grace.
+- **Input:** The client sends `player:input` when the direction changes and every 100 ms while keys are held. Each payload has `version`, a sequence from 1 to 1,000,000,000, and axis components from −1 to 1. It does not contain a position. The server accepts only a greater sequence from a connected guest who has entered. Non-finite values, magnitudes outside the axis limit, extra fields, and stale sequences are rejected. The input budget is 30 acknowledged requests per second per connection, separate from room commands. If no refresh arrives within 300 ms, the server clears the direction.
+- **Simulation:** The server runs the shared walk function on a 50 ms tick (20 Hz). A delayed tick moves at most 100 ms of distance, so a stall cannot jump the avatar across the fair. Speed, collision, and bounds match local play. While anyone in a room is inside the carnival, every connected member of that room receives a `world:snapshot` each tick. `serverTime` is the server's monotonic millisecond clock, not Unix time. Snapshots carry public pose data only.
+- **Presentation:** The local avatar predicts with the same walk function and corrects when a server pose received in the last 400 ms is more than 3 units away. Remote avatars interpolate toward the latest snapshot over 50 ms, including the short way around a turn. Other rooms never receive these snapshots.
 
 ### Session flow
 - **Lobby & Join:** Guests choose a nickname and one of four avatar colors. Creating or joining a room opens its roster and exposes a link of the form `/?invite=<inviteCode>`. The link field can be selected manually if automatic copying fails. Guests may explicitly leave to release their slots.
@@ -110,9 +117,17 @@ The browser stores the most recent room's credentials in session storage to reco
 
 A disconnected session reserves its slot for `MELA_RECONNECT_GRACE_MS` (default 30 seconds). The session expires at the deadline. Once its last session is removed, the empty room still accepts joins for `MELA_EMPTY_ROOM_TTL_MS` (default 60 seconds), then its invite expires. The server uses a monotonic clock, a one-second background sweep, and deadline checks on admission. A process restart clears all rooms and reservations.
 
-- **Proposed gameplay events (runtime schemas and authorization arrive with each feature):**
-  - Client -> Server: `player:input`, `attraction:interact`, `game:join`, `game:hit`, `shop:purchase`, `ride:board`, `ride:exit`, `fireworks:contribute`.
-  - Server -> Client: `world:snapshot`, `game:state`, `economy:updated`, `ride:state`, `fireworks:started`, `flags:updated`, `session:error`.
+- **Movement protocol v1 (CP-08):** `world:enter`, `world:leave`, and `player:input` require `version: 1` and an acknowledgment. Extra keys are rejected. Enter and leave share the room-command budget. Input has its own budget of 30 acknowledged requests per second. `world:snapshot` is broadcast to current room connections only. The payload is `{ version, roomId, serverTime, players }` where each player has `playerId`, `nickname`, `color`, `avatar` (`Man`, `Woman`, or `Cat`), `x`, `z`, `yaw`, `sequence`, and `connected`. Tokens and invite codes are absent. `serverTime` is monotonic milliseconds on the server clock.
+
+| Request | Additional fields | Outcome |
+| --- | --- | --- |
+| `world:enter` | `avatar` | Spawns the guest at `[0, 0, 11]` on the first call. A later call changes the avatar without moving or resetting the sequence. |
+| `world:leave` | None | Removes the avatar immediately. Returns `NOT_IN_WORLD` when the guest was already outside, or `NOT_IN_ROOM` when the connection has no session. |
+| `player:input` | `sequence`, `x`, `z` | Stores the direction when the sequence is newer. Returns `STALE_INPUT`, `NOT_IN_WORLD`, `NOT_IN_ROOM`, `INVALID_PAYLOAD`, or `RATE_LIMITED` without changing the pose. |
+
+- **Proposed gameplay events still to implement:**
+  - Client -> Server: `attraction:interact`, `game:join`, `game:hit`, `shop:purchase`, `ride:board`, `ride:exit`, `fireworks:contribute`.
+  - Server -> Client: `game:state`, `economy:updated`, `ride:state`, `fireworks:started`, `flags:updated`, `session:error`.
 - **Validation & Security:** All untrusted Socket.IO and HTTP payloads validated with Zod. Finite numeric checks on all coordinates/inputs. Server timestamps and sequence numbers on movement/events. Idempotency keys on all economy mutations.
 
 ## 6. Open Questions & Unresolved Requirements

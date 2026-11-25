@@ -15,7 +15,11 @@ import {
   type RoomLeaveResult,
   type RoomSnapshot,
   type ServerToClientEvents,
+  type WorldEnterResult,
+  type WorldLeaveResult,
+  type WorldSnapshot,
 } from "../shared/protocol.ts";
+import type { AvatarKind } from "../shared/world.ts";
 
 type LobbySocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 type Credentials = Pick<RoomAdmission, "inviteCode" | "sessionToken">;
@@ -31,6 +35,8 @@ const messages = {
   INVALID_PAYLOAD: "Check your nickname and invitation, then try again.",
   RATE_LIMITED: "Too many attempts. Wait a moment and try again.",
   NOT_IN_ROOM: "You’ve already left this room.",
+  NOT_IN_WORLD: "Enter the carnival before moving.",
+  STALE_INPUT: "That movement is out of date.",
 };
 
 function readCredentials(invite: string | null): Credentials | null {
@@ -65,6 +71,8 @@ export function useLobby(initialInvite: string | null) {
   const credentials = useRef<Credentials | null>(null);
   const [invite, setInvite] = useState(initialInvite);
   const [room, setRoom] = useState<Room | null>(null);
+  const [world, setWorld] = useState<WorldSnapshot | null>(null);
+  const roomId = useRef<string | null>(null);
   const [connection, setConnection] = useState<"connecting" | "offline" | "ready" | "retry">("connecting");
   const [busy, setBusy] = useState<"create" | "join" | "leave" | null>(null);
   const [error, setError] = useState("");
@@ -73,8 +81,10 @@ export function useLobby(initialInvite: string | null) {
     credentials.current = { inviteCode, sessionToken };
     saveCredentials(credentials.current);
     window.history.replaceState(null, "", invitationPath(inviteCode));
+    roomId.current = snapshot.roomId;
     setInvite(inviteCode);
     setRoom({ playerId, inviteCode, snapshot });
+    setWorld((current) => current?.roomId === snapshot.roomId ? current : null);
     setError("");
   }, []);
 
@@ -106,7 +116,9 @@ export function useLobby(initialInvite: string | null) {
         } else if (result.code === "INVALID_SESSION") {
           credentials.current = null;
           saveCredentials(null);
+          roomId.current = null;
           setRoom(null);
+          setWorld(null);
           setError(messages.INVALID_SESSION);
           setConnection("ready");
         } else {
@@ -137,10 +149,16 @@ export function useLobby(initialInvite: string | null) {
         : current);
     }
 
+    function onWorld(snapshot: WorldSnapshot) {
+      if (roomId.current !== snapshot.roomId) return;
+      setWorld(snapshot);
+    }
+
     socket.on("connect", onConnect);
     socket.on("connect_error", onConnectError);
     socket.on("disconnect", onDisconnect);
     socket.on("room:snapshot", onSnapshot);
+    socket.on("world:snapshot", onWorld);
     socket.connect();
 
     return () => {
@@ -149,6 +167,7 @@ export function useLobby(initialInvite: string | null) {
       socket.off("connect_error", onConnectError);
       socket.off("disconnect", onDisconnect);
       socket.off("room:snapshot", onSnapshot);
+      socket.off("world:snapshot", onWorld);
       socket.disconnect();
       socketRef.current = null;
     };
@@ -198,8 +217,10 @@ export function useLobby(initialInvite: string | null) {
       }
       credentials.current = null;
       saveCredentials(null);
+      roomId.current = null;
       window.history.replaceState(null, "", "/");
       setRoom(null);
+      setWorld(null);
       setInvite(null);
     } catch {
       if (socket.id === socketId) setError("Couldn’t leave the room yet. Please try again.");
@@ -208,11 +229,48 @@ export function useLobby(initialInvite: string | null) {
     }
   }
 
+  const enterWorld = useCallback(async (avatar: AvatarKind) => {
+    const socket = socketRef.current;
+    if (!socket?.connected) return null;
+    const socketId = socket.id;
+    try {
+      const result: WorldEnterResult = await socket.timeout(5000).emitWithAck("world:enter", { version, avatar });
+      if (socket.id !== socketId) return null;
+      if (!result.ok) {
+        setError(messages[result.code]);
+        return null;
+      }
+      return result.pose;
+    } catch {
+      if (socket.id === socketId) setError("The carnival didn’t respond. Try again.");
+      return null;
+    }
+  }, []);
+
+  const leaveWorld = useCallback(async () => {
+    const socket = socketRef.current;
+    if (!socket?.connected) return;
+    try {
+      const result: WorldLeaveResult = await socket.timeout(5000).emitWithAck("world:leave", { version });
+      if (!result.ok && result.code !== "NOT_IN_WORLD" && result.code !== "NOT_IN_ROOM") {
+        setError(messages[result.code]);
+      }
+    } catch {
+      // Closing the carnival still returns the guest to the room controls.
+    }
+  }, []);
+
+  const sendInput = useCallback((sequence: number, x: number, z: number) => {
+    const socket = socketRef.current;
+    if (!socket?.connected) return;
+    void socket.timeout(2000).emitWithAck("player:input", { version, sequence, x, z }).catch(() => undefined);
+  }, []);
+
   function retry() {
     setError("");
     setConnection("connecting");
     socketRef.current?.disconnect().connect();
   }
 
-  return { invite, room, connection, busy, error, enter, leave, retry };
+  return { invite, room, world, connection, busy, error, enter, leave, retry, enterWorld, leaveWorld, sendInput };
 }

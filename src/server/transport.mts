@@ -2,6 +2,7 @@ import type { Server as HttpServer } from "node:http";
 import { performance } from "node:perf_hooks";
 import { Server } from "socket.io";
 import type { ZodType } from "zod";
+import { INPUT_RATE, SNAPSHOT_INTERVAL_MS } from "../shared/movement.ts";
 import {
   MAX_SOCKET_MESSAGE_BYTES,
   PROTOCOL_VERSION,
@@ -10,15 +11,19 @@ import {
   joinRoomSchema,
   leaveRoomSchema,
   pingSchema,
+  playerInputSchema,
   resumeRoomSchema,
+  worldEnterSchema,
+  worldLeaveSchema,
   type ClientToServerEvents,
   type PingResult,
   type RequestError,
   type ServerToClientEvents,
 } from "../shared/protocol.ts";
 import { RoomManager } from "./room-manager.mts";
+import { WorldSimulation } from "./world.mts";
 
-function requestBudget() {
+function requestBudget(limit = 10) {
   let startedAt = performance.now();
   let requests = 0;
   return () => {
@@ -27,7 +32,7 @@ function requestBudget() {
       startedAt = now;
       requests = 0;
     }
-    return ++requests <= 10;
+    return ++requests <= limit;
   };
 }
 
@@ -77,10 +82,22 @@ export function attachTransport(httpServer: HttpServer) {
     },
   });
 
+  const now = () => performance.now();
+  const world = new WorldSimulation({
+    now,
+    publish(snapshot, connections) {
+      for (const connection of connections) {
+        io.sockets.sockets.get(connection)?.emit("world:snapshot", snapshot);
+      }
+    },
+  });
   const rooms = new RoomManager({
-    now: () => performance.now(),
+    now,
     reconnectGraceMs,
     emptyRoomTtlMs,
+    onSession(notice, change) {
+      world.sync(notice, change);
+    },
     publish(snapshot, connections) {
       for (const connection of connections) {
         io.sockets.sockets.get(connection)?.emit("room:snapshot", snapshot);
@@ -88,8 +105,13 @@ export function attachTransport(httpServer: HttpServer) {
     },
   });
   const sweep = setInterval(() => rooms.sweep(), 1000);
+  const movement = setInterval(() => world.tick(), SNAPSHOT_INTERVAL_MS);
   sweep.unref();
-  httpServer.once("close", () => clearInterval(sweep));
+  movement.unref();
+  httpServer.once("close", () => {
+    clearInterval(sweep);
+    clearInterval(movement);
+  });
 
   io.on("connection", (socket) => {
     const withinRoomBudget = requestBudget();
@@ -106,18 +128,39 @@ export function attachTransport(httpServer: HttpServer) {
       rooms.resume(socket.id, sessionToken),
     );
     const leave = requestHandler(leaveRoomSchema, withinRoomBudget, () => rooms.leave(socket.id));
+    const enterWorld = requestHandler(worldEnterSchema, withinRoomBudget, ({ avatar }) => {
+      const session = rooms.sessionView(socket.id);
+      if (!session) return { ok: false as const, code: "NOT_IN_ROOM" as const };
+      return { ok: true as const, pose: world.enter(session, avatar) };
+    });
+    const leaveWorld = requestHandler(worldLeaveSchema, withinRoomBudget, () => {
+      const session = rooms.sessionView(socket.id);
+      if (!session) return { ok: false as const, code: "NOT_IN_ROOM" as const };
+      return world.leave(session.playerId);
+    });
+    const move = requestHandler(playerInputSchema, requestBudget(INPUT_RATE), ({ sequence, x, z }) => {
+      const session = rooms.sessionView(socket.id);
+      if (!session) return { ok: false as const, code: "NOT_IN_ROOM" as const };
+      return world.input(session.playerId, sequence, x, z);
+    });
 
     socket.on("transport:ping", handlePing);
     socket.on("room:create", create);
     socket.on("room:join", join);
     socket.on("room:resume", resume);
     socket.on("room:leave", leave);
+    socket.on("world:enter", enterWorld);
+    socket.on("world:leave", leaveWorld);
+    socket.on("player:input", move);
     socket.once("disconnect", () => {
       socket.off("transport:ping", handlePing);
       socket.off("room:create", create);
       socket.off("room:join", join);
       socket.off("room:resume", resume);
       socket.off("room:leave", leave);
+      socket.off("world:enter", enterWorld);
+      socket.off("world:leave", leaveWorld);
+      socket.off("player:input", move);
       rooms.disconnect(socket.id);
     });
   });

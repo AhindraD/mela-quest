@@ -8,6 +8,7 @@ import {
   type RoomError,
   type RoomSnapshot,
 } from "../shared/protocol.ts";
+import type { SessionChange, SessionNotice } from "./world.mts";
 
 interface Room {
   id: string;
@@ -31,6 +32,7 @@ interface RoomManagerOptions {
   reconnectGraceMs: number;
   emptyRoomTtlMs: number;
   publish: (snapshot: RoomSnapshot, connections: string[]) => void;
+  onSession?: (notice: SessionNotice, change: SessionChange) => void;
 }
 
 export class RoomManager {
@@ -85,6 +87,7 @@ export class RoomManager {
     session.connectionId = null;
     session.reconnectUntil = this.options.now() + this.options.reconnectGraceMs;
     this.publish(session.room);
+    this.options.onSession?.(this.notice(session), "unbound");
   }
 
   leave(connectionId: string): { ok: true } | RoomError {
@@ -103,6 +106,11 @@ export class RoomManager {
     for (const room of this.rooms.values()) {
       this.expireRoomState(room, now);
     }
+  }
+
+  sessionView(connectionId: string): SessionNotice | null {
+    const session = this.connections.get(connectionId);
+    return session ? this.notice(session) : null;
   }
 
   private admit(room: Room, connectionId: string, nickname: string, color: AvatarColor): RoomAdmission {
@@ -124,6 +132,7 @@ export class RoomManager {
     session.reconnectUntil = null;
     this.connections.set(connectionId, session);
     this.publish(session.room);
+    this.options.onSession?.(this.notice(session), "bound");
   }
 
   private remove(session: Session, endedAt: number): void {
@@ -132,6 +141,7 @@ export class RoomManager {
     if (connectionId !== null) this.connections.delete(connectionId);
     room.members.delete(session);
     if (room.members.size === 0) room.emptyUntil = endedAt + this.options.emptyRoomTtlMs;
+    this.options.onSession?.(this.notice(session), "removed");
   }
 
   private expireRoomState(room: Room, now: number): boolean {
@@ -170,10 +180,23 @@ export class RoomManager {
     };
   }
 
+  private notice(session: Session): SessionNotice {
+    return {
+      playerId: session.playerId,
+      roomId: session.room.id,
+      nickname: session.nickname,
+      color: session.color,
+      connectionId: session.connectionId,
+      connections: this.connectionIds(session.room),
+    };
+  }
+
+  private connectionIds(room: Room): string[] {
+    return Array.from(room.members).flatMap(({ connectionId }) => connectionId === null ? [] : [connectionId]);
+  }
+
   private publish(room: Room): void {
-    const connections = Array.from(room.members).flatMap(({ connectionId }) =>
-      connectionId === null ? [] : [connectionId],
-    );
+    const connections = this.connectionIds(room);
     if (connections.length > 0) this.options.publish(this.snapshot(room), connections);
   }
 }
