@@ -99,6 +99,12 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
 - **Server validation (`attraction:interact`):** Requires `version: 1`, a valid `AttractionId`, active room/world presence (`NOT_IN_ROOM`, `NOT_IN_WORLD`), attraction availability (`UNAVAILABLE`), and server-checked distance (`TOO_FAR`).
 - **Accessible overlay and HUD:** Opening an attraction presents an `aria-modal="true"` dialog that moves focus to its `Close` button, suppresses avatar movement while open, keeps remote players visible and moving, and returns focus to `#world-title` on `Escape` or `Close` without exiting the carnival. The HUD displays session coins (starting at `0`) and the room roster.
 
+#### CP-11 economy and inventory
+
+- **Server-owned catalog (`src/shared/catalog.ts`):** Defines `jalebi` (15), `ladoo` (20), `lassi` (12), `lantern` (25), and `marigold` (10).
+- **Authoritative `EconomyManager` (`src/server/economy.mts`):** Tracks session-only integer balances and item counts per player, enforces idempotent `transactionId` keys (returning the original result on duplicates), rejects non-integer/non-positive amounts, rejects insufficient funds without negative balances, and rejects cross-room mutations (`ROOM_MISMATCH`). No public mint endpoint exists.
+- **Session sync (`economy:updated`):** Emitted to the player's connection on admission and `room:resume`, preserving balances and inventory across transient disconnects while the server process lives.
+
 ### Session flow
 - **Lobby & Join:** Guests choose a nickname and one of four avatar colors. Creating or joining a room opens its roster and exposes a link of the form `/?invite=<inviteCode>`. The link field can be selected manually if automatic copying fails. Guests may explicitly leave to release their slots.
 - **Interactions:** Proximity prompts appear when near an attraction; pressing `E` sends an interaction request validated by server distance and Flagsmith availability checks.

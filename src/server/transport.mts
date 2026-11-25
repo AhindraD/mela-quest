@@ -21,6 +21,7 @@ import {
   type RequestError,
   type ServerToClientEvents,
 } from "../shared/protocol.ts";
+import { EconomyManager } from "./economy.mts";
 import { RoomManager } from "./room-manager.mts";
 import { WorldSimulation } from "./world.mts";
 
@@ -92,12 +93,18 @@ export function attachTransport(httpServer: HttpServer) {
       }
     },
   });
+  const economy = new EconomyManager({
+    publish(snapshot, connectionId) {
+      io.sockets.sockets.get(connectionId)?.emit("economy:updated", snapshot);
+    },
+  });
   const rooms = new RoomManager({
     now,
     reconnectGraceMs,
     emptyRoomTtlMs,
     onSession(notice, change) {
       world.sync(notice, change);
+      economy.sync(notice, change);
     },
     publish(snapshot, connections) {
       for (const connection of connections) {

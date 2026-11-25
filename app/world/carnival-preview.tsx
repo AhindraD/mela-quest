@@ -10,7 +10,7 @@ import type {
   RoomSnapshot,
   WorldSnapshot,
 } from "../../src/shared/protocol.ts";
-import { nearestAttraction, type AttractionId, type AvatarKind, type InteractionZone } from "../../src/shared/world";
+import { nearestAttraction, type AttractionId, type AvatarKind } from "../../src/shared/world";
 import { PreviewFallback } from "./preview-fallback";
 
 const CarnivalScene = dynamic(() => import("./carnival-scene"), {
@@ -52,7 +52,6 @@ export function CarnivalPreview({
   const sequence = useRef(0);
   const request = useRef(0);
   const [initial, setInitial] = useState<(GroundPoint & { yaw: number }) | null>(null);
-  const [nearby, setNearby] = useState<InteractionZone | null>(null);
   const [activeOverlay, setActiveOverlay] = useState<{ attraction: AttractionId; label: string; summary: string } | null>(null);
   const [interactionNotice, setInteractionNotice] = useState<string | null>(null);
 
@@ -83,16 +82,11 @@ export function CarnivalPreview({
 
   const self = world?.players.find((player) => player.playerId === playerId) ?? null;
   const remotes = world?.players.filter((player) => player.playerId !== playerId) ?? [];
+  const nearby = self ? nearestAttraction(self.x, self.z) : null;
 
   useEffect(() => {
     if (activeOverlay) closeDialogButton.current?.focus();
   }, [activeOverlay]);
-
-  const onPositionChange = useCallback((point: GroundPoint) => {
-    const next = nearestAttraction(point.x, point.z);
-    setNearby((current) => (current?.id === next?.id ? current : next));
-    setInteractionNotice(null);
-  }, []);
 
   const openAttraction = useCallback(async (attraction: AttractionId) => {
     const result = await interactAttraction(attraction);
@@ -140,7 +134,7 @@ export function CarnivalPreview({
       <PreviewBoundary>
         {initial ? <CarnivalScene surface={surface} kind={kind} color={color} initial={initial}
           authoritative={self ? { x: self.x, z: self.z, yaw: self.yaw } : null}
-          remotes={remotes} onInput={onInput} onPositionChange={onPositionChange} /> : (
+          remotes={remotes} onInput={onInput} /> : (
           <p className="world-message" role="status">Loading the 3D carnival…</p>
         )}
       </PreviewBoundary>

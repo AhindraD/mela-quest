@@ -96,6 +96,14 @@ export interface WorldSnapshot {
   players: PlayerPose[];
 }
 
+export interface EconomySnapshot {
+  version: typeof PROTOCOL_VERSION;
+  roomId: string;
+  playerId: string;
+  coins: number;
+  inventory: Record<string, number>;
+}
+
 export type WorldEnterResult = { ok: true; pose: PlayerPose } | RoomError | RequestError;
 export type WorldLeaveResult =
   | { ok: true }
@@ -123,4 +131,5 @@ export interface ClientToServerEvents {
 export interface ServerToClientEvents {
   "room:snapshot": (snapshot: RoomSnapshot) => void;
   "world:snapshot": (snapshot: WorldSnapshot) => void;
+  "economy:updated": (snapshot: EconomySnapshot) => void;
 }

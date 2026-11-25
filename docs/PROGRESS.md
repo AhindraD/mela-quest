@@ -15,7 +15,7 @@
 | CP-08 | Networked movement | VERIFIED |
 | CP-09 | Carnival art pass | VERIFIED |
 | CP-10 | Interaction framework and HUD | VERIFIED |
-| CP-11 | Economy and inventory | NOT_STARTED |
+| CP-11 | Economy and inventory | VERIFIED |
 | CP-12 | Balloon game engine | NOT_STARTED |
 | CP-13 | Balloon game UI | NOT_STARTED |
 | CP-14 | Ferris wheel | NOT_STARTED |
@@ -264,4 +264,31 @@ The user approved Painted Wood (option A) and requested a woman and a cat alongs
 - **Known issues and blockers:** Coins HUD displays `0` until CP-11 (Economy and inventory) implements balances and `economy:updated`. The healthy Docker app remains running on `http://127.0.0.1:3000`.
 - **Decisions (ADR IDs):** None new.
 - **Next action:** CP-11 — Economy and inventory, after approval.
+- **Approval to advance:** pending
+
+## CP-11 — Economy and inventory
+
+- **Status:** VERIFIED
+- **Goal / requirement IDs:** `REQ-ECON-01`, `REQ-ECON-02`. Integer balances, server-owned catalog, inventory, idempotent transaction IDs, server-only mutation APIs, no public mint endpoint, and reconnect balance restoration.
+- **Starting commit / baseline:** Clean `HEAD` with CP-10 verified.
+- **Changes and files:**
+  - `src/shared/catalog.ts`: Added server-owned catalog (`jalebi`, `ladoo`, `lassi`, `lantern`, `marigold`).
+  - `src/shared/protocol.ts`: Added `EconomySnapshot` and `"economy:updated"` server event.
+  - `src/server/economy.mts` & `src/server/transport.mts`: Added `EconomyManager` (`credit`, `debit`, `purchase`, `snapshot`, `sync`) with idempotent `transactionId` tracking, integer validation, cross-room rejection, and `RoomManager` lifecycle sync.
+  - `src/client/use-lobby.ts` & `app/lobby.tsx`: Subscribed to `"economy:updated"` and passed authoritative `coins` to `CarnivalPreview`.
+  - `app/world/carnival-preview.tsx`: Derived `nearby` from the server's authoritative pose so `E` prompts never outpace server distance checks.
+  - `tests/unit/economy.test.ts` & `tests/integration/economy.test.ts`: Added unit and socket integration tests.
+  - Updated `docs/SPECS.md`, `docs/TESTING.md`, and `docs/PROGRESS.md`.
+- **Commands actually executed:**
+  - Host: `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run build` (final build succeeded on host after transient sandbox `EPERM` retries earlier).
+  - Docker: `docker compose config -q && docker compose up --build -d --wait --wait-timeout 90 && docker compose ps && curl.exe -fsS http://localhost:3000/api/health`.
+  - Isolated Docker suites: `npm.cmd run test:integration` and `npx.cmd playwright test --output test-results/cp11`.
+- **Results (exit codes, counts, observed behavior):**
+  - All final commands exited `0`.
+  - Unit: 6 files, 28 tests passed. Integration: 4 files, 9 tests passed (9.52 s). E2E: 8 tests passed (1.3 m).
+- **Evidence paths or CI run IDs:** `test-results/cp11/`; Docker manifest digest `sha256:28146edc2c4bf7db148468fba72af1fdab38791a4da1e53c1efa9d47c38ada95`.
+- **Manual checks:** PASS (verified via Chromium E2E suite and Docker readiness probe).
+- **Known issues and blockers:** None. The healthy Docker app remains running on `http://127.0.0.1:3000`.
+- **Decisions (ADR IDs):** None new.
+- **Next action:** CP-12 — Balloon game engine, after approval.
 - **Approval to advance:** pending

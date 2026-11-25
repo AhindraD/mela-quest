@@ -11,6 +11,7 @@ import {
   type AvatarColor,
   type AttractionInteractResult,
   type ClientToServerEvents,
+  type EconomySnapshot,
   type RoomAdmission,
   type RoomAdmissionResult,
   type RoomLeaveResult,
@@ -75,6 +76,8 @@ export function useLobby(initialInvite: string | null) {
   const [invite, setInvite] = useState(initialInvite);
   const [room, setRoom] = useState<Room | null>(null);
   const [world, setWorld] = useState<WorldSnapshot | null>(null);
+  const [coins, setCoins] = useState(0);
+  const [inventory, setInventory] = useState<Record<string, number>>({});
   const roomId = useRef<string | null>(null);
   const [connection, setConnection] = useState<"connecting" | "offline" | "ready" | "retry">("connecting");
   const [busy, setBusy] = useState<"create" | "join" | "leave" | null>(null);
@@ -157,11 +160,18 @@ export function useLobby(initialInvite: string | null) {
       setWorld(snapshot);
     }
 
+    function onEconomy(snapshot: EconomySnapshot) {
+      if (roomId.current !== snapshot.roomId) return;
+      setCoins(snapshot.coins);
+      setInventory(snapshot.inventory);
+    }
+
     socket.on("connect", onConnect);
     socket.on("connect_error", onConnectError);
     socket.on("disconnect", onDisconnect);
     socket.on("room:snapshot", onSnapshot);
     socket.on("world:snapshot", onWorld);
+    socket.on("economy:updated", onEconomy);
     socket.connect();
 
     return () => {
@@ -171,6 +181,7 @@ export function useLobby(initialInvite: string | null) {
       socket.off("disconnect", onDisconnect);
       socket.off("room:snapshot", onSnapshot);
       socket.off("world:snapshot", onWorld);
+      socket.off("economy:updated", onEconomy);
       socket.disconnect();
       socketRef.current = null;
     };
@@ -285,5 +296,5 @@ export function useLobby(initialInvite: string | null) {
     socketRef.current?.disconnect().connect();
   }
 
-  return { invite, room, world, connection, busy, error, enter, leave, retry, enterWorld, leaveWorld, sendInput, interactAttraction };
+  return { invite, room, world, coins, inventory, connection, busy, error, enter, leave, retry, enterWorld, leaveWorld, sendInput, interactAttraction };
 }

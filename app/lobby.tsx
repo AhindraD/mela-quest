@@ -19,7 +19,7 @@ const colorLabels: Record<AvatarColor, string> = {
 
 export function Lobby({ initialInvite }: { initialInvite: string | null }) {
   const {
-    invite, room, world, connection, busy, error, enter, leave, retry, enterWorld, leaveWorld, sendInput, interactAttraction,
+    invite, room, world, coins, connection, busy, error, enter, leave, retry, enterWorld, leaveWorld, sendInput, interactAttraction,
   } = useLobby(initialInvite);
   const [nickname, setNickname] = useState("");
   const [color, setColor] = useState<AvatarColor>(DEFAULT_AVATAR_COLOR);
@@ -59,7 +59,7 @@ export function Lobby({ initialInvite }: { initialInvite: string | null }) {
   return (
     <main className="lobby-shell">
       {previewOpen && room ? <CarnivalPreview kind={avatarKind} color={avatarColor} playerId={room.playerId}
-        roster={room.snapshot.players} coins={0} world={world} enterWorld={enterWorld} leaveWorld={leaveWorld}
+        roster={room.snapshot.players} coins={coins} world={world} enterWorld={enterWorld} leaveWorld={leaveWorld}
         sendInput={sendInput} interactAttraction={interactAttraction} onClose={closeCarnival} /> : (
         <section className="lobby-poster" aria-labelledby="carnival-title">
           <p className="lobby-wordmark"><span aria-hidden="true">✷</span> Mela.io</p>

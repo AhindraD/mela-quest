@@ -210,3 +210,12 @@ The movement browser check uses Chromium with ANGLE SwiftShader. It records rend
 | Isolated `npm.cmd run test:integration` | Exit 0. Three files, 8 tests passed in 10.67 seconds against the CP-10 Docker image, including independent per-client `attraction:interact` distance and spoofed-payload rejection. |
 | Isolated `npx.cmd playwright test --output test-results/cp10` | First run failed in the new CP-10 test because `track()` was omitted on the test contexts. After adding `track()`, all 8 E2E tests passed in 1.2 minutes: prompt appears on approach, `E` opens `Plaza Fountain` dialog and focuses `Close`, `WASD` is suppressed while modal is open, Guest moves independently, `Escape` closes only the modal and returns focus to `Carnival`, and HUD displays `Coins: 0` and roster. |
 | Screenshot inspection | Inspected `cp10-hud-and-modal.png` under `test-results/cp10/`. Confirmed HUD (`Coins: 0`, `Mira`, `Asha`), `Plaza Fountain` modal with focused `Close` button, and both avatars visible in the 3D scene. |
+
+## 13. CP-11 economy and inventory (2026-11-25)
+
+| Check | Observed result |
+| --- | --- |
+| `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run build` | All exited 0. Six unit files, 28 tests passed, including `tests/unit/economy.test.ts` (integer-only balances, idempotent `transactionId` replay, server catalog pricing, insufficient-funds rejection, no negative balances, cross-room `ROOM_MISMATCH` rejection, and `RoomManager` disconnect/resume restoration). |
+| `docker compose config -q && docker compose up --build -d --wait --wait-timeout 90` | Exit 0. Clean Linux production build (`sha256:28146edc2c4bf7db148468fba72af1fdab38791a4da1e53c1efa9d47c38ada95`). `mela-quest-app-1` healthy on `127.0.0.1:3000`; `/api/health` returned `{"status":"ok","service":"mela-io"}`. |
+| Isolated `npm.cmd run test:integration` | Exit 0. Four files, 9 tests passed in 9.52 seconds, including `tests/integration/economy.test.ts` (`economy:updated` on join and `room:resume`, and 404 on `/api/mint`). |
+| Isolated `npx.cmd playwright test --output test-results/cp11` | Exit 0. All 8 E2E tests passed in 1.3 minutes. Note: an intermediate run surfaced a prediction/server race in the CP-10 proximity prompt; deriving `nearby` from the server's authoritative pose in `app/world/carnival-preview.tsx` resolved it cleanly. |
