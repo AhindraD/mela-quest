@@ -1,0 +1,96 @@
+# Mela.io — Checkpoint Progress Ledger
+
+## Summary
+
+| Checkpoint | Title | Status |
+| --- | --- | --- |
+| CP-00 | Discovery and project contract | VERIFIED |
+| CP-01 | Reproducible Next.js skeleton | VERIFIED |
+| CP-02 | Docker runtime | NOT_STARTED |
+| CP-03 | Socket transport and protocol | NOT_STARTED |
+| CP-04 | Authoritative room manager | NOT_STARTED |
+| CP-05 | Lobby and invitation flow | NOT_STARTED |
+| CP-06 | 3D scene foundation | NOT_STARTED |
+| CP-07 | Local avatar and controls | NOT_STARTED |
+| CP-08 | Networked movement | NOT_STARTED |
+| CP-09 | Carnival art pass | NOT_STARTED |
+| CP-10 | Interaction framework and HUD | NOT_STARTED |
+| CP-11 | Economy and inventory | NOT_STARTED |
+| CP-12 | Balloon game engine | NOT_STARTED |
+| CP-13 | Balloon game UI | NOT_STARTED |
+| CP-14 | Ferris wheel | NOT_STARTED |
+| CP-15 | Shopkeeper without AI | NOT_STARTED |
+| CP-16 | Sarvam adapter and text dialogue | NOT_STARTED |
+| CP-17 | Multilingual voice | NOT_STARTED |
+| CP-18 | Flagsmith integration | NOT_STARTED |
+| CP-19 | Shared fireworks and celebration | NOT_STARTED |
+| CP-20 | Audio, accessibility and polish | NOT_STARTED |
+| CP-21 | Resilience and security | NOT_STARTED |
+| CP-22 | Observability foundation | NOT_STARTED |
+| CP-23 | NudgeBee integration verification | NOT_STARTED |
+| CP-24 | Full five-player acceptance and performance | NOT_STARTED |
+| CP-25 | Documentation and release candidate | NOT_STARTED |
+| CP-26..30 | AWS deployment (gated, not authorized) | NOT_STARTED |
+
+---
+
+## CP-00 — Discovery and project contract
+- **Status:** VERIFIED
+- **Goal / requirement IDs:** Inspect existing repository, OS, Docker/Compose, Node/npm, Git, browser, and disk; create living docs (`docs/SPECS.md`, `docs/PROGRESS.md`, `docs/DECISIONS.md`, `docs/TESTING.md`, `docs/ASSETS.md`, `docs/DEPLOYMENT.md`, `README.md`); establish requirement IDs and open questions; verify clean baseline.
+- **Starting commit / baseline:** No git repository initialized yet; directory contained only `AGENTS.md`.
+- **Changes and files:**
+  - Created `docs/SPECS.md`
+  - Created `docs/DECISIONS.md`
+  - Created `docs/TESTING.md`
+  - Created `docs/ASSETS.md`
+  - Created `docs/DEPLOYMENT.md`
+  - Created `docs/PROGRESS.md`
+  - Created `README.md`
+- **Commands actually executed:**
+  1. `Get-ChildItem -Force; git status; node -v; npm -v; git --version; docker --version; docker compose version; Get-PSDrive C | Select-Object Name, Used, Free`
+  2. `where.exe docker; docker info 2>&1; docker-compose --version 2>&1; Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe','HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe' -ErrorAction SilentlyContinue | Select-Object PSChildName, '(default)'`
+- **Results (exit codes, counts, observed behavior):**
+  - Command 1: Exit `0`. Directory had only `AGENTS.md`; `git status` -> `fatal: not a git repository`; Node `v26.13.1`; npm `11.4.2`; Git `2.56.1.windows.1`; Docker `29.9.3`; `docker compose` failed inside sandbox (`open C:\Users\offic\.docker\config.json: Access is denied`, `unknown command: docker compose`); Disk C: `141,463,687,168` bytes (~141.46 GB) free.
+  - Command 2: Exit `0`. `docker-compose --version` -> `Docker Compose version v5.7.0`. `docker info` -> Client `29.9.3` with plugins (`compose v5.7.0`, `buildx v0.38.1`), Server -> `permission denied while trying to connect to the docker API at npipe:////./pipe/docker_engine`. Browsers found: `chrome.exe` and `msedge.exe`.
+- **Evidence paths or CI run IDs:** Recorded in `docs/TESTING.md`.
+- **Manual checks:** NOT RUN (no application UI exists in CP-00).
+- **Known issues and blockers:**
+  - **Docker daemon access from sandbox:** `docker info` cannot reach `npipe:////./pipe/docker_engine` from the sandboxed terminal (`permission denied`). Must verify Docker Desktop is running and determine unsandboxed/user execution for CP-02+.
+  - **Git repository not initialized:** No `.git` directory exists yet.
+  - **Open scope/sponsor questions:** Recorded in `docs/SPECS.md` §6.
+- **Decisions (ADR IDs):** `ADR-001`, `ADR-002`, `ADR-003` (proposed), `ADR-004`.
+- **Next action:** Proceed to CP-01 — Reproducible Next.js skeleton.
+- **Approval to advance:** approved (2026-11-25)
+
+---
+
+## CP-01 — Reproducible Next.js skeleton
+- **Status:** VERIFIED
+- **Goal / requirement IDs:** Scaffold minimal Next.js App Router TypeScript app, pinned dependencies, lockfile, lint/typecheck/unit test scripts, ignore rules, `.env.example`, minimal landing page, and `/api/health` endpoint with a unit smoke test.
+- **Starting commit / baseline:** Initialized git repository in `mela-quest/` at CP-01; CP-00 living docs verified.
+- **Changes and files:**
+  - `package.json`, `package-lock.json` (pinned: `next@16.4.6`, `react@19.3.1`, `react-dom@19.3.1`, `typescript@6.0.3`, `tailwindcss@4.3.5`, `@tailwindcss/postcss@4.3.5`, `eslint@9.39.5`, `eslint-config-next@16.4.6`, `vitest@5.1.1`)
+  - `.gitignore`, `.env.example`, `tsconfig.json`, `next.config.ts`, `postcss.config.mjs`, `eslint.config.mjs`, `vitest.config.mts`
+  - `app/globals.css`, `app/layout.tsx`, `app/page.tsx`, `app/api/health/route.ts`
+  - `src/shared/health.ts`, `tests/unit/health.test.ts`
+- **Commands actually executed:**
+  1. `git -C C:\zmy_data\we-make-devs\mela-quest init`
+  2. `npm install --save-exact next react react-dom; npm install --save-dev --save-exact typescript @types/node @types/react @types/react-dom eslint eslint-config-next tailwindcss @tailwindcss/postcss vitest` (unsandboxed)
+  3. `npm run lint && npm run typecheck && npm run test:unit && npm run build`
+  4. Production HTTP probe via `node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000` (unsandboxed)
+- **Results (exit codes, counts, observed behavior):**
+  - `git init`: Exit `0`.
+  - `npm install`: Exit `0`, 486 packages audited, 0 vulnerabilities.
+  - `npm run lint`: Exit `0` (`eslint .`).
+  - `npm run typecheck`: Exit `0` (`tsc --noEmit`).
+  - `npm run test:unit`: Exit `0` (1 test file, 2 tests passed).
+  - `npm run build`: Exit `0` (`next build --webpack`; routes `/`, `/_not-found`, `/api/health`).
+  - Production HTTP probe: Exit `0`; `GET /api/health` -> `200` (`status: "ok"`, `service: "mela-io"`); `GET /` -> `200` (`Welcome to the Festive Carnival`).
+- **Evidence paths or CI run IDs:** Recorded in `docs/TESTING.md`.
+- **Manual checks:** NOT RUN (verified via HTTP response probe; visual browser inspection begins in CP-02).
+- **Known issues and blockers:**
+  - Default Turbopack `next build` panicked on Windows PostCSS worker spawn (`ADR-005` switched build script to `next build --webpack`).
+  - Docker commands in CP-02 will require unsandboxed execution (`BypassSandbox: true`) or user execution because the sandbox blocks `npipe:////./pipe/docker_engine`.
+- **Decisions (ADR IDs):** `ADR-001`, `ADR-003` (accepted), `ADR-005`.
+- **Next action:** Await user approval to proceed to CP-02 — Docker runtime.
+- **Approval to advance:** pending
