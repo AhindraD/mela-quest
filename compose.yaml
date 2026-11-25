@@ -5,5 +5,20 @@ services:
     environment:
       MELA_RECONNECT_GRACE_MS: ${MELA_RECONNECT_GRACE_MS:-30000}
       MELA_EMPTY_ROOM_TTL_MS: ${MELA_EMPTY_ROOM_TTL_MS:-60000}
+      MELA_BALLOON_ROUND_MS: ${MELA_BALLOON_ROUND_MS:-30000}
+      SPONSOR_MODE: ${SPONSOR_MODE:-live}
+      SARVAM_API_KEY: ${SARVAM_API_KEY:-}
+      FLAGSMITH_ENVIRONMENT_KEY: ${FLAGSMITH_ENVIRONMENT_KEY:-}
+      FLAGSMITH_API_URL: ${FLAGSMITH_API_URL:-}
+      NUDGEBEE_API_KEY: ${NUDGEBEE_API_KEY:-}
     ports:
       - "127.0.0.1:3000:3000"
+
+  flagsmith:
+    image: flagsmith/flagsmith:latest
+    profiles: ["flagsmith"]
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      USE_POSTGRES: "false"
+      ENABLE_ADMIN_ACCESS_USER_PASS: "true"

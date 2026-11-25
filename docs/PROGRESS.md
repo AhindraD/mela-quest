@@ -18,16 +18,16 @@
 | CP-11 | Economy and inventory | VERIFIED |
 | CP-12 | Balloon game engine | VERIFIED |
 | CP-13 | Balloon game UI | VERIFIED |
-| CP-14 | Ferris wheel | NOT_STARTED |
-| CP-15 | Shopkeeper without AI | NOT_STARTED |
-| CP-16 | Sarvam adapter and text dialogue | NOT_STARTED |
-| CP-17 | Multilingual voice | NOT_STARTED |
-| CP-18 | Flagsmith integration | NOT_STARTED |
-| CP-19 | Shared fireworks and celebration | NOT_STARTED |
-| CP-20 | Audio, accessibility and polish | NOT_STARTED |
+| CP-14 | Ferris wheel | IN_PROGRESS |
+| CP-15 | Shopkeeper without AI | IN_PROGRESS |
+| CP-16 | Sarvam adapter and text dialogue | IN_PROGRESS |
+| CP-17 | Multilingual voice | IN_PROGRESS |
+| CP-18 | Flagsmith integration | IN_PROGRESS |
+| CP-19 | Shared fireworks and celebration | IN_PROGRESS |
+| CP-20 | Audio, accessibility and polish | IN_PROGRESS |
 | CP-21 | Resilience and security | NOT_STARTED |
-| CP-22 | Observability foundation | NOT_STARTED |
-| CP-23 | NudgeBee integration verification | NOT_STARTED |
+| CP-22 | Observability foundation | IN_PROGRESS |
+| CP-23 | NudgeBee integration verification | IN_PROGRESS |
 | CP-24 | Full five-player acceptance and performance | NOT_STARTED |
 | CP-25 | Documentation and release candidate | NOT_STARTED |
 | CP-26..30 | AWS deployment (gated, not authorized) | NOT_STARTED |

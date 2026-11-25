@@ -3,18 +3,32 @@
 import dynamic from "next/dynamic";
 import { Component, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { GroundPoint } from "../../src/shared/movement";
+import type { CatalogItemId } from "../../src/shared/catalog.ts";
 import type {
   AttractionInteractResult,
   AvatarColor,
   BalloonGameState,
+  FeatureFlags,
+  FireworksContributeResult,
+  FireworksState,
   GameHitResult,
   GameJoinResult,
   PlayerPose,
+  RideBoardResult,
+  RideExitResult,
+  RideState,
   RoomSnapshot,
+  ShopChatResult,
+  ShopPurchaseResult,
+  ShopVoiceResult,
+  SupportedLanguage,
   WorldSnapshot,
 } from "../../src/shared/protocol.ts";
 import { nearestAttraction, type AttractionId, type AvatarKind } from "../../src/shared/world";
 import { BalloonGameModal } from "../attractions/balloon-game-modal";
+import { FerrisWheelModal } from "../attractions/ferris-wheel-modal";
+import { FountainModal } from "../attractions/fountain-modal";
+import { MithaiShopModal } from "../attractions/mithai-shop-modal";
 import { PreviewFallback } from "./preview-fallback";
 
 const CarnivalScene = dynamic(() => import("./carnival-scene"), {
@@ -35,16 +49,21 @@ class PreviewBoundary extends Component<{ children: ReactNode }, { failed: boole
 }
 
 export function CarnivalPreview({
-  kind, color, playerId, roster, coins, balloonGame, balloonGameAt, world, enterWorld, leaveWorld,
-  sendInput, interactAttraction, joinBalloonGame, hitBalloonTarget, leaveBalloonGame, onClose,
+  kind, color, playerId, roster, coins, inventory, balloonGame, balloonGameAt, rideState, flags, fireworksState,
+  world, enterWorld, leaveWorld, sendInput, interactAttraction, joinBalloonGame, hitBalloonTarget, leaveBalloonGame,
+  boardRide, exitRide, purchaseShopItem, chatWithShopkeeper, voiceWithShopkeeper, contributeFireworks, onClose,
 }: {
   kind: AvatarKind;
   color: AvatarColor;
   playerId: string;
   roster: RoomSnapshot["players"];
   coins: number;
+  inventory: Record<string, number>;
   balloonGame: BalloonGameState | null;
   balloonGameAt: number;
+  rideState: RideState | null;
+  flags: FeatureFlags;
+  fireworksState: FireworksState | null;
   world: WorldSnapshot | null;
   enterWorld: (avatar: AvatarKind) => Promise<PlayerPose | null>;
   leaveWorld: () => Promise<void>;
@@ -53,6 +72,12 @@ export function CarnivalPreview({
   joinBalloonGame: () => Promise<GameJoinResult>;
   hitBalloonTarget: (roundId: string, targetId: string) => Promise<GameHitResult>;
   leaveBalloonGame: () => Promise<void>;
+  boardRide: (seatIndex?: number) => Promise<RideBoardResult>;
+  exitRide: () => Promise<RideExitResult>;
+  purchaseShopItem: (itemId: CatalogItemId) => Promise<ShopPurchaseResult>;
+  chatWithShopkeeper: (message: string, language: SupportedLanguage) => Promise<ShopChatResult>;
+  voiceWithShopkeeper: (audioBase64: string, mimeType: string, language: SupportedLanguage) => Promise<ShopVoiceResult>;
+  contributeFireworks: (amount: number) => Promise<FireworksContributeResult>;
   onClose: () => void;
 }) {
   const surface = useRef<HTMLElement>(null);
@@ -64,6 +89,8 @@ export function CarnivalPreview({
   const [initial, setInitial] = useState<(GroundPoint & { yaw: number }) | null>(null);
   const [activeOverlay, setActiveOverlay] = useState<{ attraction: AttractionId; label: string; summary: string } | null>(null);
   const [interactionNotice, setInteractionNotice] = useState<string | null>(null);
+  const [muted, setMuted] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -147,7 +174,8 @@ export function CarnivalPreview({
       <PreviewBoundary>
         {initial ? <CarnivalScene surface={surface} kind={kind} color={color} initial={initial}
           authoritative={self ? { x: self.x, z: self.z, yaw: self.yaw } : null}
-          remotes={remotes} onInput={onInput} /> : (
+          remotes={remotes} onInput={onInput}
+          fireworksActive={Boolean(fireworksState?.activeUntil)} reducedMotion={reducedMotion} /> : (
           <p className="world-message" role="status">Loading the 3D carnival…</p>
         )}
       </PreviewBoundary>
@@ -156,7 +184,18 @@ export function CarnivalPreview({
         <p id="world-controls">WASD or arrow keys to move. E to interact. Esc to return.</p>
       </div>
       <div className="world-hud" aria-label="Carnival HUD">
-        <p className="world-hud-pill" aria-label={`Coins: ${coins}`}>Coins: {coins}</p>
+        <div className="world-hud-controls">
+          <button type="button" className="world-hud-button" aria-pressed={muted} onClick={() => setMuted((m) => !m)}>
+            {muted ? "Unmute" : "Mute"}
+          </button>
+          <button type="button" className="world-hud-button" aria-pressed={reducedMotion}
+            onClick={() => setReducedMotion((r) => !r)}>
+            {reducedMotion ? "Motion: Reduced" : "Motion: Full"}
+          </button>
+        </div>
+        <p className="world-hud-pill" aria-label={`Coins: ${coins}`}>
+          Coins: {coins}{flags.double_rewards ? " (2x)" : ""}
+        </p>
         <ul className="world-hud-roster" aria-label="Carnival roster">
           {roster.map((guest) => (
             <li key={guest.playerId}>
@@ -166,6 +205,11 @@ export function CarnivalPreview({
           ))}
         </ul>
       </div>
+      {fireworksState?.activeUntil && (
+        <p className="world-fireworks-banner" role="status">
+          Fireworks celebration active!
+        </p>
+      )}
       {nearby && !activeOverlay && (
         <div className="world-prompt" role="status">
           <button type="button" className="world-prompt-button" onClick={() => void openAttraction(nearby.id)}>
@@ -183,6 +227,32 @@ export function CarnivalPreview({
               receivedAt={balloonGameAt}
               onJoin={joinBalloonGame}
               onHit={hitBalloonTarget}
+              onClose={closeOverlay}
+            />
+          ) : activeOverlay.attraction === "ferrisWheel" ? (
+            <FerrisWheelModal
+              playerId={playerId}
+              rideState={rideState}
+              onBoard={boardRide}
+              onExit={exitRide}
+              onClose={closeOverlay}
+            />
+          ) : activeOverlay.attraction === "mithaiShop" ? (
+            <MithaiShopModal
+              coins={coins}
+              inventory={inventory}
+              muted={muted}
+              aiEnabled={flags.ai_shopkeeper}
+              onPurchase={purchaseShopItem}
+              onChat={chatWithShopkeeper}
+              onVoice={voiceWithShopkeeper}
+              onClose={closeOverlay}
+            />
+          ) : activeOverlay.attraction === "fountain" ? (
+            <FountainModal
+              coins={coins}
+              fireworksState={fireworksState}
+              onContribute={contributeFireworks}
               onClose={closeOverlay}
             />
           ) : (

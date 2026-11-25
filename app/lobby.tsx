@@ -19,8 +19,10 @@ const colorLabels: Record<AvatarColor, string> = {
 
 export function Lobby({ initialInvite }: { initialInvite: string | null }) {
   const {
-    invite, room, world, coins, balloonGame, balloonGameAt, connection, busy, error, enter, leave, retry,
-    enterWorld, leaveWorld, sendInput, interactAttraction, joinBalloonGame, hitBalloonTarget, leaveBalloonGame,
+    invite, room, world, coins, inventory, balloonGame, balloonGameAt, rideState, flags, fireworksState,
+    connection, busy, error, enter, leave, retry, enterWorld, leaveWorld, sendInput, interactAttraction,
+    joinBalloonGame, hitBalloonTarget, leaveBalloonGame, boardRide, exitRide,
+    purchaseShopItem, chatWithShopkeeper, voiceWithShopkeeper, contributeFireworks,
   } = useLobby(initialInvite);
   const [nickname, setNickname] = useState("");
   const [color, setColor] = useState<AvatarColor>(DEFAULT_AVATAR_COLOR);
@@ -60,9 +62,14 @@ export function Lobby({ initialInvite }: { initialInvite: string | null }) {
   return (
     <main className="lobby-shell">
       {previewOpen && room ? <CarnivalPreview kind={avatarKind} color={avatarColor} playerId={room.playerId}
-        roster={room.snapshot.players} coins={coins} balloonGame={balloonGame} balloonGameAt={balloonGameAt} world={world}
-        enterWorld={enterWorld} leaveWorld={leaveWorld} sendInput={sendInput} interactAttraction={interactAttraction}
-        joinBalloonGame={joinBalloonGame} hitBalloonTarget={hitBalloonTarget} leaveBalloonGame={leaveBalloonGame}
+        roster={room.snapshot.players} coins={coins} inventory={inventory}
+        balloonGame={balloonGame} balloonGameAt={balloonGameAt}
+        rideState={rideState} flags={flags} fireworksState={fireworksState}
+        world={world} enterWorld={enterWorld} leaveWorld={leaveWorld} sendInput={sendInput}
+        interactAttraction={interactAttraction} joinBalloonGame={joinBalloonGame} hitBalloonTarget={hitBalloonTarget}
+        leaveBalloonGame={leaveBalloonGame} boardRide={boardRide} exitRide={exitRide}
+        purchaseShopItem={purchaseShopItem} chatWithShopkeeper={chatWithShopkeeper}
+        voiceWithShopkeeper={voiceWithShopkeeper} contributeFireworks={contributeFireworks}
         onClose={closeCarnival} /> : (
         <section className="lobby-poster" aria-labelledby="carnival-title">
           <p className="lobby-wordmark"><span aria-hidden="true">✷</span> Mela.io</p>
