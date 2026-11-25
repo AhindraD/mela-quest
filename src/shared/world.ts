@@ -39,3 +39,51 @@ export const FAIR_PERIMETER = [
 export const PLANTING_BEDS: WorldPoint[] = [
   [-11.7, 0, 8.3], [11.7, 0, 8.3], [-13.5, 0, -8], [4.4, 0, -10.6],
 ];
+
+export type AttractionId = keyof typeof LANDMARKS;
+
+export interface InteractionZone {
+  id: AttractionId;
+  label: string;
+  anchor: WorldPoint;
+  approach: WorldPoint;
+  radius: number;
+}
+
+export const INTERACTION_ZONES: Record<AttractionId, InteractionZone> = {
+  fountain: {
+    id: "fountain",
+    label: "Plaza Fountain",
+    anchor: LANDMARKS.fountain,
+    approach: [0, 0, 4.9],
+    radius: 5.4,
+  },
+  balloonStall: {
+    id: "balloonStall",
+    label: "Balloon Stall",
+    anchor: LANDMARKS.balloonStall,
+    approach: [-10, 0, 5.8],
+    radius: 4.2,
+  },
+  mithaiShop: {
+    id: "mithaiShop",
+    label: "Mithai Shop",
+    anchor: LANDMARKS.mithaiShop,
+    approach: [10, 0, 5.8],
+    radius: 4.2,
+  },
+  ferrisWheel: {
+    id: "ferrisWheel",
+    label: "Ferris Wheel",
+    anchor: LANDMARKS.ferrisWheel,
+    approach: [9, 0, -5.0],
+    radius: 5.2,
+  },
+  dancePavilion: {
+    id: "dancePavilion",
+    label: "Dance Pavilion",
+    anchor: LANDMARKS.dancePavilion,
+    approach: [-9, 0, -3.5],
+    radius: 5.5,
+  },
+};

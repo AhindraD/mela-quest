@@ -65,6 +65,9 @@ export default function CarnivalScene({ surface, kind, color, initial, authorita
           <mesh geometry={fair.glows} dispose={null}>
             <meshBasicMaterial vertexColors transparent depthWrite={false} blending={AdditiveBlending} />
           </mesh>
+          <mesh geometry={fair.signs} dispose={null}>
+            <meshBasicMaterial map={fair.signMap} />
+          </mesh>
           <LocalPlayer surface={surface} kind={kind} color={color} initial={initial}
             authoritative={authoritative} onInput={onInput} />
           <RemotePlayers players={remotes} />

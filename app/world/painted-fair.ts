@@ -1,6 +1,6 @@
 import {
   BoxGeometry, BufferGeometry, CanvasTexture, Color, CylinderGeometry, Euler, Float32BufferAttribute,
-  Matrix4, Quaternion, Shape, ShapeGeometry, SphereGeometry, Vector3, SRGBColorSpace,
+  Matrix4, PlaneGeometry, Quaternion, Shape, ShapeGeometry, SphereGeometry, Vector3, SRGBColorSpace,
 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { LANDMARKS, PLANTING_BEDS, LANDMARK_FOOTPRINTS, LANTERN_POSITIONS, FAIR_PERIMETER, type WorldPoint } from "../../src/shared/world";
@@ -15,7 +15,26 @@ const fruit = new SphereGeometry(1, 8, 5);
 export function buildFair() {
   const painted: BufferGeometry[] = [], lit: BufferGeometry[] = [];
   const glows: BufferGeometry[] = [];
+  const signGeos: BufferGeometry[] = [];
+  const signLabels: string[] = [];
   const lightPools: WorldPoint[] = [];
+  function sign(x: number, y: number, z: number, width: number, height: number, text: string) {
+    box(x, y, z, width + 0.16, height + 0.14, 0.12, darkWood);
+    const index = signLabels.length;
+    signLabels.push(text);
+    const g = new PlaneGeometry(width, height).toNonIndexed();
+    const uv = g.getAttribute("uv");
+    const totalSlots = 5;
+    const vTop = 1 - index / totalSlots;
+    const vBottom = 1 - (index + 1) / totalSlots;
+    for (let i = 0; i < uv.count; i++) {
+      uv.setY(i, uv.getY(i) > 0.5 ? vTop - 0.01 : vBottom + 0.01);
+    }
+    const local = new Matrix4().makeTranslation(x, y, z + 0.07);
+    const group = new Matrix4().makeRotationY(yaw).scale(new Vector3(modelScale, modelScale, modelScale)).setPosition(...origin);
+    g.applyMatrix4(group.multiply(local));
+    signGeos.push(g);
+  }
   let origin: WorldPoint = [0, 0, 0];
   let yaw = 0;
   let modelScale = 1;
@@ -110,6 +129,14 @@ export function buildFair() {
       box(x, .029, z, 1.9, .02, 1.82, ochres[Math.abs(row * 7 + col * 3) % ochres.length]);
     }
   }
+  // Low-poly connecting paths from the central plaza to each attraction.
+  for (const side of [-1, 1]) {
+    box(side * 8.6, .015, 5.2, 5.6, .02, 2.2, "#c79456");
+    box(side * 7.8, .026, 5.2, 1.6, .02, 1.5, "#e4b378");
+    box(side * 9.8, .026, 5.6, 2.0, .02, 1.6, "#dca564");
+    box(side * 8.2, .015, -4.6, 3.8, .02, 3.4, "#c79456");
+    box(side * 8.6, .026, -4.5, 1.8, .02, 1.6, "#e4b378");
+  }
   for (let i = 0; i < FAIR_PERIMETER.length; i++) {
     const [x, z] = FAIR_PERIMETER[i], [nx, nz] = FAIR_PERIMETER[(i + 1) % FAIR_PERIMETER.length];
     function rail(ax: number, az: number, bx: number, bz: number) {
@@ -155,6 +182,7 @@ export function buildFair() {
     const a = i * Math.PI / 4;
     box(Math.sin(a) * 2.99, .43, Math.cos(a) * 2.99, .32, .67, .32, honey);
   }
+  sign(0, 1.05, 3.25, 1.7, 0.45, "MELA PLAZA");
 
   function canopy(width: number, depth: number, y: number, height: number) {
     // Four sloping painted faces and a warm valance.
@@ -184,6 +212,7 @@ export function buildFair() {
     box(0, 1.5, 1.06, 4.7, .15, .96, honey);
     yaw = sweets ? -.085 : .085;
     canopy(5.3, 3.65, 3.55, .52);
+    sign(0, 3.75, 1.88, 2.1, 0.52, sweets ? "MITHAI SHOP" : "BALLOONS");
     lamp(sweets ? 2.06 : -2.06, 2.76, 1.63, 1.04);
     for (let i = 0; i < 3; i++) {
       const x = (i - 1) * 1.13;
@@ -207,6 +236,11 @@ export function buildFair() {
     lamp(x, 4.17, z, .77);
   }
   canopy(7.25, 5.55, 5.02, 1.92);
+  sign(0, 5.2, 2.84, 2.6, 0.56, "DANCE PAVILION");
+  // Brass diya stage centerpiece on the pavilion floor.
+  drum(0, .92, 0, .75, .92, .24, 8, honey);
+  drum(0, 1.18, 0, .38, .48, .28, 8, gold);
+  part(fruit, 0, 1.46, 0, [.22, .32, .22], cream, [0, 0, 0], true);
   drum(0, 7.13, 0, .4, .48, .4, 8, honey);
   for (let i = -1; i <= 1; i++) {
     for (let j = 0; j <= 6; j++) {
@@ -236,6 +270,8 @@ export function buildFair() {
     }
   }
   part(fruit, 0, cy, .78, [.63, .63, .29], gold);
+  box(-2.4, .95, 1.72, .18, 1.15, .18, timber);
+  sign(-2.4, 1.55, 1.78, 2.3, 0.54, "FERRIS WHEEL");
 
   origin = [0, 0, 0]; yaw = 0;
   const posts: WorldPoint[] = [[-17, 4.6, 3], [-11.5, 5.85, -14], [0, 4.9, -14], [11.5, 5.85, -14], [17, 4.6, 3]];
@@ -286,5 +322,35 @@ export function buildFair() {
     const texture = new CanvasTexture(canvas); texture.colorSpace = SRGBColorSpace;
     return texture;
   }
-  return { painted: merge(painted), lit: merge(lit), glows: merge(glows), groundMap: groundPaint() };
+  function signPaint() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext("2d")!;
+    const slotHeight = canvas.height / 5;
+    signLabels.forEach((label, index) => {
+      const top = index * slotHeight;
+      ctx.fillStyle = "#ffe99a";
+      ctx.fillRect(0, top, canvas.width, slotHeight);
+      ctx.strokeStyle = "#974f2c";
+      ctx.lineWidth = 10;
+      ctx.strokeRect(8, top + 8, canvas.width - 16, slotHeight - 16);
+      ctx.fillStyle = "#3b2059";
+      ctx.font = "bold 46px system-ui, -apple-system, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(label, canvas.width / 2, top + slotHeight / 2 + 2);
+    });
+    const texture = new CanvasTexture(canvas);
+    texture.colorSpace = SRGBColorSpace;
+    return texture;
+  }
+  return {
+    painted: merge(painted),
+    lit: merge(lit),
+    glows: merge(glows),
+    signs: merge(signGeos),
+    groundMap: groundPaint(),
+    signMap: signPaint(),
+  };
 }

@@ -87,6 +87,12 @@ Mela.io is a cozy, browser-based, 3D Indian festive carnival ("mela") for privat
 - **Simulation:** The server runs the shared walk function on a 50 ms tick (20 Hz). A delayed tick moves at most 100 ms of distance, so a stall cannot jump the avatar across the fair. Speed, collision, and bounds match local play. While anyone in a room is inside the carnival, every connected member of that room receives a `world:snapshot` each tick. `serverTime` is the server's monotonic millisecond clock, not Unix time. Snapshots carry public pose data only.
 - **Presentation:** The local avatar predicts with the same walk function and corrects when a server pose received in the last 400 ms is more than 3 units away. Remote avatars interpolate toward the latest snapshot over 50 ms, including the short way around a turn. Other rooms never receive these snapshots.
 
+#### CP-09 carnival art pass
+
+- **Paths and landmarks:** Low-poly ochre paths connect the central plaza to all four surrounding attractions (`balloonStall`, `mithaiShop`, `dancePavilion`, `ferrisWheel`). The Dance Pavilion includes a central brass diya stage centerpiece, and the Ferris Wheel includes a front boarding signpost.
+- **Readable signs:** Five procedural `CanvasTexture` signboards (`MELA PLAZA`, `BALLOONS`, `MITHAI SHOP`, `DANCE PAVILION`, `FERRIS WHEEL`) are batched into a single `signs` mesh using the Painted Wood palette.
+- **Shared interaction geometry:** `INTERACTION_ZONES` in `src/shared/world.ts` defines each attraction's `anchor`, unobstructed `approach` point, and `radius`. Every approach point is verified reachable from `SPAWN_POSITION` via `walk()`.
+
 ### Session flow
 - **Lobby & Join:** Guests choose a nickname and one of four avatar colors. Creating or joining a room opens its roster and exposes a link of the form `/?invite=<inviteCode>`. The link field can be selected manually if automatic copying fails. Guests may explicitly leave to release their slots.
 - **Interactions:** Proximity prompts appear when near an attraction; pressing `E` sends an interaction request validated by server distance and Flagsmith availability checks.

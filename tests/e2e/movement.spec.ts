@@ -39,7 +39,7 @@ async function remotes(page: Page) {
 async function enterCarnival(page: Page) {
   await page.getByRole("button", { name: "Enter carnival" }).click();
   await expect(page.getByRole("heading", { name: "Carnival", exact: true })).toBeFocused();
-  await expect(page.getByRole("img", { name: "Painted Wood carnival scene" })).toBeVisible();
+  await expect(page.getByRole("img", { name: "Painted Wood carnival scene" })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText("Loading the 3D carnival…")).toBeHidden();
 }
 

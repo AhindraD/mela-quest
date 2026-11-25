@@ -13,7 +13,7 @@
 | CP-06 | 3D scene foundation | VERIFIED |
 | CP-07 | Local avatar and controls | VERIFIED |
 | CP-08 | Networked movement | VERIFIED |
-| CP-09 | Carnival art pass | NOT_STARTED |
+| CP-09 | Carnival art pass | VERIFIED |
 | CP-10 | Interaction framework and HUD | NOT_STARTED |
 | CP-11 | Economy and inventory | NOT_STARTED |
 | CP-12 | Balloon game engine | NOT_STARTED |
@@ -212,4 +212,31 @@ The user approved Painted Wood (option A) and requested a woman and a cat alongs
 - **Known issues and blockers:** Guests overlap at the shared spawn. Remote motion trails the server by about one 50 ms tick. A stalled tick does not catch up more than 100 ms. Hardware GPU frame time was not measured. Rooms and poses still disappear on process restart. The healthy app remains on localhost.
 - **Decisions:** `ADR-014`.
 - **Next action:** CP-09 — Carnival art pass, after approval. The Prototype A visual review is still open.
+- **Approval to advance:** pending
+
+## CP-09 — Carnival art pass
+
+- **Status:** VERIFIED
+- **Goal / requirement IDs:** `REQ-WORLD-01`, `REQ-WORLD-02`, and shared collision/interaction geometry. Add connecting low-poly paths, readable landmark signs, Dance Pavilion stage centerpiece, shared `INTERACTION_ZONES`, layout reachability tests, desktop screenshot inspection, and WebGL render measurements.
+- **Starting commit / baseline:** Clean `HEAD` with CP-08 verified.
+- **Changes and files:**
+  - `src/shared/world.ts`: Added `INTERACTION_ZONES` (`anchor`, `approach`, `radius`, `label`) for `fountain`, `balloonStall`, `mithaiShop`, `ferrisWheel`, and `dancePavilion`.
+  - `src/shared/movement.ts`: Exported `isBlocked` for layout and collision verification.
+  - `app/world/painted-fair.ts` & `app/world/carnival-scene.tsx`: Added connecting ochre paths, Dance Pavilion brass diya centerpiece, Ferris Wheel boarding signpost, and a single batched `signs` mesh + `CanvasTexture` atlas (`MELA PLAZA`, `BALLOONS`, `MITHAI SHOP`, `DANCE PAVILION`, `FERRIS WHEEL`).
+  - `tests/unit/carnival-layout.test.ts`: Added unit tests for unobstructed spawn, landmark collision alignment, and BFS reachability of every landmark from spawn via `walk()`.
+  - `tests/e2e/world.spec.ts` & `tests/e2e/movement.spec.ts`: Added CP-09 desktop screenshot and render-metrics test (`1280x720`, `1440x900`); raised 5-browser WebGL2 readiness timeout in `movement.spec.ts` from 5000 ms to 15000 ms.
+  - Updated `docs/ASSETS.md`, `docs/SPECS.md`, `docs/TESTING.md`, and `docs/PROGRESS.md`.
+- **Commands actually executed:**
+  - Host: `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run build` (build retried once after transient sandbox `EPERM`).
+  - Docker: `docker compose config -q && docker compose up --build -d --wait --wait-timeout 90 && docker compose ps && curl.exe -fsS http://localhost:3000/api/health && docker compose logs --tail=80 app`.
+  - Isolated Docker suites: `npm.cmd run test:integration` and `npx.cmd playwright test --output test-results/cp09`.
+- **Results (exit codes, counts, observed behavior):**
+  - All final host, Docker, integration, and E2E commands exited `0`.
+  - Unit: 5 files, 25 tests passed. Integration: 3 files, 7 tests passed (8.28 s). E2E: 7 tests passed (1.7 m) with 0 console errors, 0 page errors, and 0 failed asset requests.
+  - Observed rendering metrics (Chromium SwiftShader): `29` draw calls, `14428` triangles, `40.6` ms median frame interval across `59` samples on `ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)`.
+- **Evidence paths or CI run IDs:** `test-results/cp09/` (`cp09-desktop-1280.png`, `cp09-desktop-1440.png`); Docker manifest digest `sha256:91be4d6f1a6943168753cd7115ac878c7110a0373d60c198c870eb225a02db92`.
+- **Manual checks:** PASS — inspected `1280x720` and `1440x900` desktop screenshots from the Docker-served Chromium session; all five signs, paths, and landmarks are visible and legible.
+- **Known issues and blockers:** Rendering was measured on ANGLE SwiftShader software WebGL; hardware GPU frame time remains unmeasured. The healthy Docker app remains running on `http://127.0.0.1:3000`.
+- **Decisions (ADR IDs):** None new (follows `ADR-010`, `ADR-013`).
+- **Next action:** CP-10 — Interaction framework and HUD, after approval.
 - **Approval to advance:** pending

@@ -189,3 +189,14 @@ Final run: clean host install exited 0 (521 packages installed). Lint, typecheck
 | `docker compose stop app`, inspect, `docker compose start --wait --wait-timeout 60 app`, health probe, logs | Exit 0. Stop reported `exited 0`. Restart became healthy and readiness returned `status: "ok"`. Logs showed a second clean listen line and no errors. |
 
 The movement browser check uses Chromium with ANGLE SwiftShader. It records rendered transforms through Three's inspection hook and saves `guest-sees-host.png` and `fifth-sees-movement.png` under `test-results/cp08/`. Those captures show separate avatars in one carnival. They are functional evidence, not a GPU performance measurement. Hardware frame time was not measured.
+
+## 11. CP-09 carnival art pass (2026-11-25)
+
+| Check | Observed result |
+| --- | --- |
+| `npm run lint`, `npm run typecheck`, `npm run test:unit`, `npm run build` | All exited 0. Five unit files, 25 tests passed, including `tests/unit/carnival-layout.test.ts` (unobstructed spawn, aligned landmark collisions, clear `INTERACTION_ZONES` approach points, and BFS reachability of all 5 landmarks from spawn via `walk()`). `npm run build` hit a transient sandbox `EPERM` on `mkdir` on the first run and exited 0 on retry. |
+| `docker compose config -q && docker compose up --build -d --wait --wait-timeout 90` | Exit 0. Clean Linux production build (`sha256:91be4d6f1a6943168753cd7115ac878c7110a0373d60c198c870eb225a02db92`). `mela-quest-app-1` healthy on `127.0.0.1:3000`; `/api/health` returned `{"status":"ok","service":"mela-io"}`; logs showed no errors. |
+| Isolated `npm.cmd run test:integration` | Exit 0. Three files, 7 tests passed in 8.28 seconds against the CP-09 Docker image. |
+| Isolated `npx.cmd playwright test --output test-results/cp09` | First run: 6 passed, 1 failed (`movement.spec.ts` timed out at 5000 ms waiting for the 5th concurrent SwiftShader WebGL2 canvas). Raised `toBeVisible` timeout in `tests/e2e/movement.spec.ts` to 15000 ms and reran: all 7 E2E tests passed in 1.7 minutes with zero console errors, zero page errors, and zero failed asset requests. |
+| Rendering measurement (Chromium SwiftShader) | `CP09_RENDER_METRICS`: `29` draw calls, `14428` triangles, `40.6` ms median frame interval across `59` samples on `ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)`. |
+| Screenshot inspection | Inspected `cp09-desktop-1280.png` (1280×720) and `cp09-desktop-1440.png` (1440×900) under `test-results/cp09/`. Confirmed readable signs (`MELA PLAZA`, `BALLOONS`, `MITHAI SHOP`, `DANCE PAVILION`, `FERRIS WHEEL`), connecting paths, and Dance Pavilion diya centerpiece. |

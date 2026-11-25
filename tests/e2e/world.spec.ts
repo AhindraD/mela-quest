@@ -197,3 +197,67 @@ test("explains the WebGL fallback and keeps room controls available", async ({ p
   await expect(page.getByRole("heading", { name: "Create a room" })).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test("CP-09 art pass renders signs and landmarks cleanly at desktop sizes", async ({ page }, testInfo) => {
+  const errors: string[] = [];
+  const failedAssets: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  page.on("response", (response) => {
+    if (response.status() >= 400) failedAssets.push(`${response.status()} ${response.url()}`);
+  });
+
+  await page.addInitScript(() => {
+    const devtools = new EventTarget();
+    const frameTimes: number[] = [];
+    let lastRender = 0;
+    Object.assign(window, { __THREE_DEVTOOLS__: devtools, __CP09_METRICS__: { frameTimes, calls: 0, triangles: 0, renderer: "" } });
+    devtools.addEventListener("observe", (event) => {
+      const scene = (event as CustomEvent).detail as import("three").Scene;
+      if (!scene.isScene) return;
+      scene.onAfterRender = (gl) => {
+        const now = performance.now();
+        if (lastRender > 0) frameTimes.push(now - lastRender);
+        lastRender = now;
+        const context = gl.getContext();
+        const debugExt = context.getExtension("WEBGL_debug_renderer_info");
+        const renderer = debugExt ? String(context.getParameter(debugExt.UNMASKED_RENDERER_WEBGL)) : String(context.getParameter(context.RENDERER));
+        Object.assign((window as unknown as { __CP09_METRICS__: Record<string, unknown> }).__CP09_METRICS__, {
+          calls: gl.info.render.calls,
+          triangles: gl.info.render.triangles,
+          renderer,
+        });
+      };
+    });
+  });
+
+  await page.setViewportSize({ width: 1280, height: 720 });
+  const preview = await openPreview(page);
+  const canvas = preview.getByRole("img", { name: "Painted Wood carnival scene" }).locator("canvas");
+  await expect(canvas).toBeVisible();
+  await expect(preview.getByText("Loading the 3D carnival…")).toBeHidden();
+  await preview.screenshot({ path: testInfo.outputPath("cp09-desktop-1280.png") });
+
+  await page.keyboard.down("w");
+  await renderFor(page, 600);
+  await page.keyboard.up("w");
+
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await renderFor(page, 200);
+  await preview.screenshot({ path: testInfo.outputPath("cp09-desktop-1440.png") });
+
+  const metrics = await page.evaluate(() => {
+    const raw = (window as unknown as { __CP09_METRICS__: { frameTimes: number[]; calls: number; triangles: number; renderer: string } }).__CP09_METRICS__;
+    const sorted = [...raw.frameTimes].sort((a, b) => a - b);
+    const medianFrameMs = sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0;
+    return { calls: raw.calls, triangles: raw.triangles, renderer: raw.renderer, samples: sorted.length, medianFrameMs };
+  });
+  console.log("CP09_RENDER_METRICS", JSON.stringify(metrics));
+
+  expect(metrics.calls).toBeGreaterThan(0);
+  expect(metrics.triangles).toBeGreaterThan(0);
+  expect(failedAssets).toEqual([]);
+  expect(errors).toEqual([]);
+});

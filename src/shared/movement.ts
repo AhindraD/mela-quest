@@ -88,6 +88,10 @@ export function interpolatePoint(from: GroundPoint, to: GroundPoint, alpha: numb
   return { x: from.x + (to.x - from.x) * t, z: from.z + (to.z - from.z) * t };
 }
 
+export function isBlocked(x: number, z: number) {
+  return blocked(x, z);
+}
+
 export function interpolateYaw(from: number, to: number, alpha: number) {
   const t = Math.min(1, Math.max(0, alpha));
   const turn = Math.atan2(Math.sin(to - from), Math.cos(to - from));
