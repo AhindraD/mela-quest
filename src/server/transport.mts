@@ -25,6 +25,7 @@ import {
   rideExitSchema,
   shopChatSchema,
   shopPurchaseSchema,
+  shopVoiceHttpSchema,
   shopVoiceSchema,
   worldEnterSchema,
   worldLeaveSchema,
@@ -213,6 +214,59 @@ export function attachTransport(httpServer: HttpServer) {
   movement.unref();
   games.unref();
   flagsPoll.unref();
+  httpServer.on("request", (request, response) => {
+    if (request.method !== "POST" || request.url !== "/api/shop/voice") return;
+    const chunks: Buffer[] = [];
+    let totalBytes = 0;
+    let tooLarge = false;
+    request.on("data", (chunk: Buffer) => {
+      totalBytes += chunk.length;
+      if (totalBytes > 750_000) {
+        tooLarge = true;
+        response.writeHead(413, { "Content-Type": "application/json" }).end(JSON.stringify({ ok: false, code: "INVALID_PAYLOAD" }));
+        request.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    request.on("end", () => {
+      if (tooLarge) return;
+      void (async () => {
+        try {
+          const parsed = shopVoiceHttpSchema.safeParse(JSON.parse(Buffer.concat(chunks).toString("utf8")));
+          if (!parsed.success) {
+            response.writeHead(400, { "Content-Type": "application/json" }).end(JSON.stringify({ ok: false, code: "INVALID_PAYLOAD" }));
+            return;
+          }
+          const session = rooms.activeSessionByToken(parsed.data.sessionToken);
+          if (!session) {
+            response.writeHead(401, { "Content-Type": "application/json" }).end(JSON.stringify({ ok: false, code: "NOT_IN_ROOM" }));
+            return;
+          }
+          if (!flagsmith.getFlags().ai_shopkeeper) {
+            response.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify({ ok: false, code: "UNAVAILABLE" }));
+            return;
+          }
+          const pose = world.pose(session.playerId);
+          if (!pose) {
+            response.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify({ ok: false, code: "NOT_IN_WORLD" }));
+            return;
+          }
+          const shop = INTERACTION_ZONES.mithaiShop;
+          if (Math.hypot(pose.x - shop.anchor[0], pose.z - shop.anchor[2]) > shop.radius) {
+            response.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify({ ok: false, code: "TOO_FAR" }));
+            return;
+          }
+          recordSarvamRequest();
+          const result = await sarvamShopVoice(parsed.data.audioBase64, parsed.data.mimeType, parsed.data.language);
+          response.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify({ ok: true, ...result }));
+        } catch {
+          response.writeHead(400, { "Content-Type": "application/json" }).end(JSON.stringify({ ok: false, code: "INVALID_PAYLOAD" }));
+        }
+      })();
+    });
+  });
+
   httpServer.once("close", () => {
     clearInterval(sweep);
     clearInterval(movement);

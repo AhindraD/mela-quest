@@ -414,7 +414,7 @@ export function useLobby(initialInvite: string | null) {
     const socket = socketRef.current;
     if (!socket?.connected) return { ok: false, code: "NOT_IN_ROOM" };
     try {
-      return await socket.timeout(12_000).emitWithAck("shop:chat", { version, message, language });
+      return await socket.timeout(20_000).emitWithAck("shop:chat", { version, message, language });
     } catch {
       return { ok: false, code: "UNAVAILABLE" };
     }
@@ -425,10 +425,15 @@ export function useLobby(initialInvite: string | null) {
     mimeType: string,
     language: SupportedLanguage,
   ): Promise<ShopVoiceResult> => {
-    const socket = socketRef.current;
-    if (!socket?.connected) return { ok: false, code: "NOT_IN_ROOM" };
+    const sessionToken = credentials.current?.sessionToken;
+    if (!sessionToken) return { ok: false, code: "NOT_IN_ROOM" };
     try {
-      return await socket.timeout(15_000).emitWithAck("shop:voice", { version, audioBase64, mimeType, language });
+      const response = await fetch("/api/shop/voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ version, sessionToken, audioBase64, mimeType, language }),
+      });
+      return (await response.json()) as ShopVoiceResult;
     } catch {
       return { ok: false, code: "UNAVAILABLE" };
     }

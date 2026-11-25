@@ -35,7 +35,7 @@ async function synthesizeSpeech(apiKey: string, text: string, language: Supporte
       body: JSON.stringify({
         text: text.slice(0, 300),
         target_language_code: language,
-        model: "bulbul:v2",
+        model: "bulbul:v3",
       }),
       signal: AbortSignal.timeout(8000),
     });
@@ -64,7 +64,7 @@ export async function sarvamShopChat(
         "api-subscription-key": apiKey,
       },
       body: JSON.stringify({
-        model: "sarvam-m",
+        model: "sarvam-105b-conversations",
         messages: [
           { role: "system", content: `${SYSTEM_PROMPT} Respond in language code ${language}.` },
           { role: "user", content: message },
@@ -107,7 +107,7 @@ export async function sarvamShopVoice(
     const bytes = Buffer.from(audioBase64, "base64");
     const form = new FormData();
     form.append("file", new Blob([bytes], { type: mimeType }), "voice.webm");
-    form.append("model", "saarika:v2");
+    form.append("model", "saaras:v3");
     form.append("language_code", language);
 
     const sttResponse = await fetch(`${SARVAM_BASE_URL}/speech-to-text`, {

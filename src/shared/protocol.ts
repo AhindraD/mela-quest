@@ -86,6 +86,13 @@ export const shopVoiceSchema = z.strictObject({
   mimeType: z.string().min(1).max(64),
   language: z.enum(SUPPORTED_LANGUAGES).default("en-IN"),
 });
+export const shopVoiceHttpSchema = z.strictObject({
+  ...roomRequest,
+  sessionToken: z.string().length(43).regex(/^[A-Za-z0-9_-]+$/),
+  audioBase64: z.string().min(1).max(700_000),
+  mimeType: z.string().min(1).max(64),
+  language: z.enum(SUPPORTED_LANGUAGES).default("en-IN"),
+});
 export const fireworksContributeSchema = z.strictObject({
   ...roomRequest,
   amount: z.number().int().gte(1).lte(50),
